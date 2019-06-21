@@ -1,0 +1,11 @@
+/opt/clion-2018.3.1/bin/cmake/linux/bin/cmake -DCMAKE_BUILD_TYPE=Debug -G "CodeBlocks - Unix Makefiles" "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project"
+-- Found installed version of Eigen: /usr/local/share/eigen3/cmake
+-- Found required Ceres dependency: Eigen version 3.3.2 in /usr/local/include/eigen3
+-- Found required Ceres dependency: glog
+-- Found installed version of gflags: /usr/lib/x86_64-linux-gnu/cmake/gflags
+-- Detected gflags version: 2.2.1
+-- Found required Ceres dependency: gflags
+-- Found Ceres version: 1.14.0 installed in: /usr/local with components: [EigenSparse, SparseLinearAlgebraLibrary, LAPACK, SuiteSparse, CXSparse, SchurSpecializations, OpenMP, Multithreading]
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug

@@ -1,0 +1,27 @@
+cmake_minimum_required(VERSION 2.8)
+project(stereo_reconstruction)
+
+set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake ${CMAKE_MODULE_PATH})
+set(CMAKE_CXX_FLAGS "-std=c++14 ${CMAKE_CXX_FLAGS}")
+add_definitions(-DPROJECT_DIR="${PROJECT_SOURCE_DIR}")
+
+# Eigen
+find_package(Eigen3 REQUIRED)
+include_directories(${EIGEN3_INCLUDE_DIR})
+
+# Ceres Solver
+find_package(Ceres REQUIRED)
+include_directories(${CERES_INCLUDE_DIRS})
+
+# FreeImage
+# find_package(freeimage REQUIRED)
+# include_directories(${FREEIMAGE_INCLUDE_DIRS})
+
+# Set files to be compiled
+set(HEADER_FILES
+        )
+set(SOURCE_FILES
+        )
+
+add_executable(stereo_reconstruction main.cpp ${HEADER_FILES} ${SOURCE_FILES})
+target_link_libraries(stereo_reconstruction freeimage ${CERES_LIBRARIES})
