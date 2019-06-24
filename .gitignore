@@ -33,3 +33,6 @@
 
 # Dataset
 project/data
+
+# Ignore workspace file
+project/.idea/workspace.xml
