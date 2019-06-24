@@ -30,3 +30,33 @@
  *      - Output: Image like format, either to save as .png again or stream?
  *
  * **/
+
+class StereoImage {
+	public:
+		explicit StereoImage(unsigned char * image_left, unsigned char * image_right);
+		void rectify();
+		void patchmatch();
+		void reconstruct();
+
+	private:
+		// raw data
+		std::vector<pixel> image_left;
+		std::vector<pixel> image_right;
+		// final output, empty at the beginning
+		std::vector<pixel> image_depth;
+		
+		// empty at beginning, filled with a rectified copy of the image
+		std::vector<pixel> image_left_rect;
+		std::vector<pixel> image_right_rect;
+		
+		// individual features
+		std::vector<feature> features_left;
+		std::vector<feature> features_right;
+	
+		// tuple list of features that match
+		std::vector<index_tuple> feature_matches;
+		
+		// point cloud
+		std::vector<point> point_cloud;
+
+}
