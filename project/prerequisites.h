@@ -5,10 +5,19 @@
 
 // Type definitions
 
+#ifndef MINF
+#define MINF -std::numeric_limits<float>::infinity()
+#endif
+
 typedef Eigen::Matrix<unsigned char, 4, 1> Pixel; // Works as Vector4uc
 typedef float Feature;
 
-struct Point {
+enum DEPTH_MODE {
+    GRAY,
+    HSV
+};
+
+struct Vertex {
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Eigen::Vector4f position;
     Pixel color;

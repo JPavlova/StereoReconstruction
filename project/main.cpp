@@ -1,7 +1,10 @@
+#include <iostream>
 #include <vector>
 
 #include "stereoimage.h"
 #include "prerequisites.h"
+#include "exporter.h"
+#include <FreeImage.h>
 
 // MAIN FILE TO RUN PIPELINE
 
@@ -45,9 +48,24 @@ int main(int argc, char *argv[])
     // -- Patchmatch
 
 
-    // point cloud
-    std::vector<Point> point_cloud;
+    // part 4:
+    CameraSensor sensor;
+    int width = sensor.getLeftImageWidth();
+    int height = sensor.getLeftImageHeight();
 
+    // just some temporary "images" to work with
+    Pixel tmp_left[width * height];
+    Pixel tmp_right[width * height];
+
+    StereoImage testImage(tmp_left, tmp_right, &sensor);
+
+    // point cloud/ backprojection
+    Vertex vertices[width * height];
+    testImage.backproject_frame(vertices);
+
+    // export point cloud to .off
+    writeMesh(vertices, width, height, "./pointcloud.off");
+    writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
 
     return 0;
 }

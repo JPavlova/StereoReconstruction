@@ -3,6 +3,7 @@
 
 #include <vector>
 #include "prerequisites.h"
+#include "camerasensor.h"
 
 using namespace Eigen;
 
@@ -10,21 +11,26 @@ using namespace Eigen;
 
 class StereoImage {
     public:
-        StereoImage(unsigned char * image_left, unsigned char * image_right);
+        StereoImage(Pixel *image_left, Pixel *image_right, CameraSensor *sensor);
         ~StereoImage()
         {
+            /**
             SAFE_DELETE_ARRAY(image_left);
             SAFE_DELETE_ARRAY(image_right);
             SAFE_DELETE_ARRAY(image_left_rect);
             SAFE_DELETE_ARRAY(image_right_rect);
             SAFE_DELETE_ARRAY(image_depth);
+            **/
         }
         void rectify();
         void patchmatch();
-        void reconstruct();
 
+        bool backproject_frame(Vertex *vertices);
+        float *getDepthImage();
 
     private:
+        CameraSensor *sensor;
+
         // raw data
         Pixel* image_left;
         Pixel* image_right;

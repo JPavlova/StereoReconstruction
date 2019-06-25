@@ -14,13 +14,15 @@ find_package(Ceres REQUIRED)
 include_directories(${CERES_INCLUDE_DIRS})
 
 # FreeImage
-# find_package(freeimage REQUIRED)
+# find_package(FreeImage REQUIRED)
 # include_directories(${FREEIMAGE_INCLUDE_DIRS})
 
 # Set files to be compiled
 set(HEADER_FILES
     stereoimage.h
     prerequisites.h
+    camerasensor.h
+    exporter.h
         )
 set(SOURCE_FILES
     stereoimage.cpp
