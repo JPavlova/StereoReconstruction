@@ -34,5 +34,6 @@
 # Dataset
 project/data
 
-# Ignore workspace file
+# Ignore workspace file and build
 project/.idea/workspace.xml
+build*
