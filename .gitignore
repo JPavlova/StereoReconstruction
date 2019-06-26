@@ -37,4 +37,5 @@ project/data
 # Ignore workspace file and build
 project/.idea/workspace.xml
 build*
+project/cmake-build*
 project/CMakeLists.txt.user

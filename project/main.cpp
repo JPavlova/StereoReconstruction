@@ -41,31 +41,42 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-
-    // Create StereoImage
-
-    // -- Rectify
-    // -- Patchmatch
-
-
-    // part 4:
+    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
     CameraSensor sensor;
-    int width = sensor.getLeftImageWidth();
-    int height = sensor.getLeftImageHeight();
 
-    // just some temporary "images" to work with
-    Pixel tmp_left[width * height];
-    Pixel tmp_right[width * height];
+    if(!sensor.Init(dataDir)) {
+        std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
+        return -1;
+    }
 
-    StereoImage testImage(tmp_left, tmp_right, &sensor);
+    // Sensor loop over all frames
+    while(sensor.ProcessNextFrame()) {
 
-    // point cloud/ backprojection
-    Vertex vertices[width * height];
-    testImage.backproject_frame(vertices);
+        // Create StereoImage from current sensor frames
+        StereoImage testImage(sensor.getLeftFrame(), sensor.getRightFrame(), &sensor);
 
-    // export point cloud to .off
-    writeMesh(vertices, width, height, "./pointcloud.off");
-    writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
+
+        // -- Rectify
+        // -- Patchmatch
+
+
+        // part 4:
+
+        // point cloud/ backprojection
+
+        int width = testImage.getLeftImageWidth();
+        int height = testImage.getLeftImageHeight();
+
+        Vertex vertices[width * height];
+        testImage.backproject_frame(vertices);
+
+        // export point cloud to .off
+        writeMesh(vertices, width, height, "./pointcloud.off");
+        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
+
+    }
+
+
 
     return 0;
 }

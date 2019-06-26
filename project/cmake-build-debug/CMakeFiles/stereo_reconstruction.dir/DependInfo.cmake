@@ -4,7 +4,9 @@ set(CMAKE_DEPENDS_LANGUAGES
   )
 # The set of files for implicit dependencies of each language:
 set(CMAKE_DEPENDS_CHECK_CXX
+  "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.cpp" "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o"
   "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/main.cpp" "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/stereo_reconstruction.dir/main.cpp.o"
+  "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.cpp" "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o"
   )
 set(CMAKE_CXX_COMPILER_ID "GNU")
 

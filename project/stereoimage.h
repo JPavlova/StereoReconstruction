@@ -4,6 +4,7 @@
 #include <vector>
 #include "prerequisites.h"
 #include "camerasensor.h"
+#include <iostream>
 
 using namespace Eigen;
 
@@ -11,43 +12,60 @@ using namespace Eigen;
 
 class StereoImage {
     public:
-        StereoImage(Pixel *image_left, Pixel *image_right, CameraSensor *sensor);
+        StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor *sensor);
         ~StereoImage()
         {
-            /**
-            SAFE_DELETE_ARRAY(image_left);
-            SAFE_DELETE_ARRAY(image_right);
-            SAFE_DELETE_ARRAY(image_left_rect);
-            SAFE_DELETE_ARRAY(image_right_rect);
-            SAFE_DELETE_ARRAY(image_depth);
-            **/
+            SAFE_DELETE_ARRAY(m_leftImage);
+            SAFE_DELETE_ARRAY(m_rightImage);
+            SAFE_DELETE_ARRAY(m_leftImageRectified);
+            SAFE_DELETE_ARRAY(m_rightImageRectified);
+            SAFE_DELETE_ARRAY(m_depthImage);
         }
         void rectify();
         void patchmatch();
 
         bool backproject_frame(Vertex *vertices);
+
+        // GETTERS
+
+        Pixel *getLeftImage() const;
+        Pixel *getRightImage() const;
+        int getLeftImageWidth() const;
+        int getLeftImageHeight() const;
+        int getRightImageWidth() const;
+        int getRightImageHeight() const;
+        Pixel *getLeftImageRectified() const;
+        Pixel *getRightImageRectified() const;
+        std::vector<Feature> getLeftFeatures() const;
+        std::vector<Feature> getRightFeatures() const;
+        std::vector<std::pair<int, int> > getFeatureMatches() const;
         float *getDepthImage();
 
-    private:
+private:
         CameraSensor *sensor;
 
         // raw data
-        Pixel* image_left;
-        Pixel* image_right;
+        Pixel* m_leftImage;
+        Pixel* m_rightImage;
+
+        int m_leftImageWidth;
+        int m_leftImageHeight;
+        int m_rightImageWidth;
+        int m_rightImageHeight;
 
         // empty at beginning, filled with a rectified copy of the image
-        Pixel* image_left_rect;
-        Pixel* image_right_rect;
+        Pixel* m_leftImageRectified;
+        Pixel* m_rightImageRectified;
 
         // individual features
-        std::vector<Feature> features_left;
-        std::vector<Feature> features_right;
+        std::vector<Feature> m_leftFeatures;
+        std::vector<Feature> m_rightFeatures;
 
         // tuple list of features that match
-        std::vector<std::pair<int, int>> feature_matches;
+        std::vector<std::pair<int, int>> m_featureMatches;
 
         // final output, empty at the beginning
-        float* image_depth;
+        float* m_depthImage;
 
 };
 

@@ -90,7 +90,28 @@
 				</MakeCommands>
 			</Target>
 		</Build>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.cpp">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.h">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/camerasensor.h">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/exporter.h">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
 		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/main.cpp">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/prerequisites.h">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.cpp">
+			<Option target="stereo_reconstruction"/>
+		</Unit>
+		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.h">
 			<Option target="stereo_reconstruction"/>
 		</Unit>
 		<Unit filename="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/CMakeLists.txt">

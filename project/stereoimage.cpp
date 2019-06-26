@@ -1,9 +1,28 @@
 #include "stereoimage.h"
-#include <iostream>
 
-StereoImage::StereoImage(Pixel *image_left, Pixel *image_right, CameraSensor *sensor) : image_left(image_left), image_right(image_right), sensor(sensor)
+/**
+ * @brief StereoImage::StereoImage
+ * create StereoImage from left/right BYTE * arrays and camera sensor, save in Pixel* array for left/right images
+ * @param leftImage : BYTE * array
+ * @param rightImage : BYTE * array
+ * @param sensor : CameraSensor * object
+ */
+StereoImage::StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor * sensor) : sensor(sensor)
 {
-    image_depth = new float[sensor->getLeftImageWidth() * sensor->getLeftImageHeight()];
+    m_leftImageWidth = sensor->getLeftImageWidth();
+    m_leftImageHeight = sensor->getLeftImageHeight();
+    m_rightImageWidth = sensor->getRightImageWidth();
+    m_rightImageHeight = sensor->getRightImageHeight();
+
+    m_leftImage = new Pixel[m_leftImageWidth * m_leftImageHeight];
+    m_rightImage = new Pixel[m_rightImageWidth * m_rightImageHeight];
+    m_depthImage = new float[m_leftImageWidth * m_leftImageHeight];
+
+    // read in BYTE pixel values as Pixel (Vectur4uc)
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImage[idx] = Pixel(leftImage[4*idx], leftImage[4*idx+1], leftImage[4*idx+2], leftImage[4*idx+3]);
+    for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImage[idx] = Pixel(rightImage[4*idx], rightImage[4*idx+1], rightImage[4*idx+2], rightImage[4*idx+3]);
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = 0.0f;
+
 }
 
 /**
@@ -14,8 +33,8 @@ StereoImage::StereoImage(Pixel *image_left, Pixel *image_right, CameraSensor *se
 
 bool StereoImage::backproject_frame(Vertex *vertices)
 {
-    Pixel *colorMap = image_left;
-    float *depthMap = image_depth;
+    Pixel *colorMap = m_leftImage;
+    float *depthMap = m_depthImage;
 
     Matrix3f leftIntrinsics = sensor->getLeftIntrinsics();
     Matrix3f leftIntrinsicsInv = sensor->getLeftIntrinsics().inverse();
@@ -52,6 +71,64 @@ bool StereoImage::backproject_frame(Vertex *vertices)
     return true;
 }
 
-float* StereoImage::getDepthImage() {
-    return image_depth;
+// GETTERS
+
+Pixel *StereoImage::getLeftImage() const
+{
+    return m_leftImage;
 }
+
+Pixel *StereoImage::getRightImage() const
+{
+    return m_rightImage;
+}
+
+int StereoImage::getLeftImageWidth() const
+{
+    return m_leftImageWidth;
+}
+
+int StereoImage::getLeftImageHeight() const
+{
+    return m_leftImageHeight;
+}
+
+int StereoImage::getRightImageWidth() const
+{
+    return m_rightImageWidth;
+}
+
+int StereoImage::getRightImageHeight() const
+{
+    return m_rightImageHeight;
+}
+
+Pixel *StereoImage::getLeftImageRectified() const
+{
+    return m_leftImageRectified;
+}
+
+Pixel *StereoImage::getRightImageRectified() const
+{
+    return m_rightImageRectified;
+}
+
+std::vector<Feature> StereoImage::getLeftFeatures() const
+{
+    return m_leftFeatures;
+}
+
+std::vector<Feature> StereoImage::getRightFeatures() const
+{
+    return m_rightFeatures;
+}
+
+std::vector<std::pair<int, int> > StereoImage::getFeatureMatches() const
+{
+    return m_featureMatches;
+}
+
+float* StereoImage::getDepthImage() {
+    return m_depthImage;
+}
+

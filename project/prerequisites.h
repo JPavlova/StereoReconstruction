@@ -2,6 +2,7 @@
 #define PREREQUISITES_H
 
 #include <Eigen/Eigen>
+#include <iostream>
 
 // Type definitions
 

@@ -70,14 +70,44 @@ CMakeFiles/stereo_reconstruction.dir/main.cpp.s: cmake_force
 	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_reconstruction.dir/main.cpp.s"
 	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/main.cpp" -o CMakeFiles/stereo_reconstruction.dir/main.cpp.s
 
+CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o: CMakeFiles/stereo_reconstruction.dir/flags.make
+CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o: ../FreeImageHelper.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Building CXX object CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o -c "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.cpp"
+
+CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.cpp" > CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.i
+
+CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/FreeImageHelper.cpp" -o CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.s
+
+CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o: CMakeFiles/stereo_reconstruction.dir/flags.make
+CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o: ../stereoimage.cpp
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --progress-dir="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_3) "Building CXX object CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o"
+	/usr/bin/c++  $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -o CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o -c "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.cpp"
+
+CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.i: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Preprocessing CXX source to CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.i"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -E "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.cpp" > CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.i
+
+CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.s: cmake_force
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green "Compiling CXX source to assembly CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.s"
+	/usr/bin/c++ $(CXX_DEFINES) $(CXX_INCLUDES) $(CXX_FLAGS) -S "/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/stereoimage.cpp" -o CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.s
+
 # Object files for target stereo_reconstruction
 stereo_reconstruction_OBJECTS = \
-"CMakeFiles/stereo_reconstruction.dir/main.cpp.o"
+"CMakeFiles/stereo_reconstruction.dir/main.cpp.o" \
+"CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o" \
+"CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o"
 
 # External object files for target stereo_reconstruction
 stereo_reconstruction_EXTERNAL_OBJECTS =
 
 stereo_reconstruction: CMakeFiles/stereo_reconstruction.dir/main.cpp.o
+stereo_reconstruction: CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o
+stereo_reconstruction: CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o
 stereo_reconstruction: CMakeFiles/stereo_reconstruction.dir/build.make
 stereo_reconstruction: /usr/local/lib/libceres.a
 stereo_reconstruction: /usr/lib/x86_64-linux-gnu/libglog.so
@@ -101,7 +131,7 @@ stereo_reconstruction: /usr/lib/x86_64-linux-gnu/libsuitesparseconfig.so
 stereo_reconstruction: /usr/lib/x86_64-linux-gnu/librt.so
 stereo_reconstruction: /usr/lib/x86_64-linux-gnu/libcxsparse.so
 stereo_reconstruction: CMakeFiles/stereo_reconstruction.dir/link.txt
-	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_2) "Linking CXX executable stereo_reconstruction"
+	@$(CMAKE_COMMAND) -E cmake_echo_color --switch=$(COLOR) --green --bold --progress-dir="/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles" --progress-num=$(CMAKE_PROGRESS_4) "Linking CXX executable stereo_reconstruction"
 	$(CMAKE_COMMAND) -E cmake_link_script CMakeFiles/stereo_reconstruction.dir/link.txt --verbose=$(VERBOSE)
 
 # Rule to build all files generated by this target.

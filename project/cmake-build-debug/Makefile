@@ -123,6 +123,33 @@ stereo_reconstruction/fast:
 	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/build
 .PHONY : stereo_reconstruction/fast
 
+FreeImageHelper.o: FreeImageHelper.cpp.o
+
+.PHONY : FreeImageHelper.o
+
+# target to build an object file
+FreeImageHelper.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.o
+.PHONY : FreeImageHelper.cpp.o
+
+FreeImageHelper.i: FreeImageHelper.cpp.i
+
+.PHONY : FreeImageHelper.i
+
+# target to preprocess a source file
+FreeImageHelper.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.i
+.PHONY : FreeImageHelper.cpp.i
+
+FreeImageHelper.s: FreeImageHelper.cpp.s
+
+.PHONY : FreeImageHelper.s
+
+# target to generate assembly for a file
+FreeImageHelper.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/FreeImageHelper.cpp.s
+.PHONY : FreeImageHelper.cpp.s
+
 main.o: main.cpp.o
 
 .PHONY : main.o
@@ -150,6 +177,33 @@ main.cpp.s:
 	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/main.cpp.s
 .PHONY : main.cpp.s
 
+stereoimage.o: stereoimage.cpp.o
+
+.PHONY : stereoimage.o
+
+# target to build an object file
+stereoimage.cpp.o:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.o
+.PHONY : stereoimage.cpp.o
+
+stereoimage.i: stereoimage.cpp.i
+
+.PHONY : stereoimage.i
+
+# target to preprocess a source file
+stereoimage.cpp.i:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.i
+.PHONY : stereoimage.cpp.i
+
+stereoimage.s: stereoimage.cpp.s
+
+.PHONY : stereoimage.s
+
+# target to generate assembly for a file
+stereoimage.cpp.s:
+	$(MAKE) -f CMakeFiles/stereo_reconstruction.dir/build.make CMakeFiles/stereo_reconstruction.dir/stereoimage.cpp.s
+.PHONY : stereoimage.cpp.s
+
 # Help Target
 help:
 	@echo "The following are some of the valid targets for this Makefile:"
@@ -159,9 +213,15 @@ help:
 	@echo "... rebuild_cache"
 	@echo "... stereo_reconstruction"
 	@echo "... edit_cache"
+	@echo "... FreeImageHelper.o"
+	@echo "... FreeImageHelper.i"
+	@echo "... FreeImageHelper.s"
 	@echo "... main.o"
 	@echo "... main.i"
 	@echo "... main.s"
+	@echo "... stereoimage.o"
+	@echo "... stereoimage.i"
+	@echo "... stereoimage.s"
 .PHONY : help
 
 
