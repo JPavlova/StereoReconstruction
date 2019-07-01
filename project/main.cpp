@@ -55,7 +55,6 @@ int main(int argc, char *argv[])
         // Create StereoImage from current sensor frames
         StereoImage testImage(sensor.getLeftFrame(), sensor.getRightFrame(), &sensor);
 
-
         // -- Rectify
         // -- Patchmatch
 
@@ -67,12 +66,12 @@ int main(int argc, char *argv[])
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
 
-        Vertex vertices[width * height];
+        Vertex *vertices = new Vertex[width * height];
         testImage.backproject_frame(vertices);
 
         // export point cloud to .off
-        writeMesh(vertices, width, height, "./pointcloud.off");
-        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
+        //writeMesh(vertices, width, height, "./pointcloud.off");
+        //writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
 
     }
 
