@@ -1,4 +1,5 @@
 #include "stereoimage.h"
+#include <random>
 
 /**
  * @brief StereoImage::StereoImage
@@ -21,7 +22,7 @@ StereoImage::StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor * sen
     // read in BYTE pixel values as Pixel (Vectur4uc)
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImage[idx] = Pixel(leftImage[4*idx], leftImage[4*idx+1], leftImage[4*idx+2], leftImage[4*idx+3]);
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImage[idx] = Pixel(rightImage[4*idx], rightImage[4*idx+1], rightImage[4*idx+2], rightImage[4*idx+3]);
-    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = 0.0f;
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = (std::rand() % 100) / 10.0f; // random initialization
 
 }
 

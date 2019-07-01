@@ -1,5 +1,6 @@
 #include <iostream>
 #include <vector>
+#include <random>
 
 #include "stereoimage.h"
 #include "prerequisites.h"
@@ -70,9 +71,9 @@ int main(int argc, char *argv[])
         testImage.backproject_frame(vertices);
 
         // export point cloud to .off
+        std::cout << "random number: " << (std::rand() % 100) / 10.0f << std::endl;
+        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
         //writeMesh(vertices, width, height, "./pointcloud.off");
-        //writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
-
     }
 
 
