@@ -21,7 +21,6 @@ PatchMatch::PatchMatch(Pixel *leftImage, Pixel *rightImage, int width, int heigh
 
 int *PatchMatch::computeDisparity()
 {
-    init();
     for (int i = 0; i < NUM_ITERATIONS; i++)
     {
         for (int y = 0; y < m_height_disparity; y++){
