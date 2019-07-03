@@ -26,10 +26,12 @@ set(HEADER_FILES
     FreeImageHelper.h
     camerasensor.h
     exporter.h
+    patchmatch.h
         )
 set(SOURCE_FILES
     FreeImageHelper.cpp
     stereoimage.cpp
+    patchmatch.cpp
         )
 
 add_executable(stereo_reconstruction main.cpp ${HEADER_FILES} ${SOURCE_FILES})
