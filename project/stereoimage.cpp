@@ -1,10 +1,13 @@
 #include "stereoimage.h"
 #include <random>
-//#include <opencv4/opencv2/core.hpp>
-//#include <opencv4/opencv2/highgui.hpp>
-//#include <opencv4/opencv2/features2d.hpp>
-//#include <opencv4/opencv2/xfeatures2d.hpp>
-//#include <opencv4/opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv4/opencv2/core.hpp>
+#include <opencv4/opencv2/highgui.hpp>
+#include <opencv4/opencv2/features2d.hpp>
+#include <opencv4/opencv2/xfeatures2d.hpp>
+#include <opencv4/opencv2/xfeatures2d/nonfree.hpp>
+#include <opencv4/opencv2/cvconfig.h>
+#include <opencv4/opencv2/imgproc.hpp>
+
 
 
 
@@ -108,6 +111,7 @@ Matrix3f decomposeMatrix(Matrix3f D)
     D(1,2) = 0.f;
     return D;
 }
+
 void StereoImage::rectify()
 {
  int w = sensor -> getLeftImageHeight();
@@ -115,7 +119,7 @@ void StereoImage::rectify()
 
 
  Pixel* il =  getLeftImage();
- Pixel* iR = getRightImage();
+ Pixel* ir =  getRightImage();
 
  /*Berechne Foundation Matrix F*/
 
@@ -210,10 +214,15 @@ void StereoImage::rectify()
          0.f, 1.f, 0.f,
          w2.x(), w2.y(), 1.f;
 
- //Output
- //m_leftImageRectified;
- //m_rightImageRectified;
+ Pixel* v1;
+ Pixel* v2;
 
+ //Output
+  cv::warpPerspective( il->matrix(), v1->matrix(), Hp1, w*h );
+  cv::warpPerspective( ir->matrix(), v2->matrix(), Hp2, w*h );
+
+  setLeftImageRectified(v1);
+  setRightImageRectified(v2);
 
 }
 
@@ -279,3 +288,12 @@ float* StereoImage::getDepthImage() {
     return m_depthImage;
 }
 
+//SETTERS
+void StereoImage::setLeftImageRectified(Pixel* value)
+{
+    m_leftImageRectified = value;
+}
+void StereoImage::setRightImageRectified(Pixel *value)
+{
+    m_rightImageRectified = value;
+}
