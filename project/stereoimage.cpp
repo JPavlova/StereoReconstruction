@@ -195,13 +195,20 @@ void StereoImage::rectify()
 
  float vc = 0 - il->bottomLeftCorner(0,h).value(); //??
 
- Matrix3f Hr1, Hr2;
+ Matrix3f Hr1, Hr2, Hp1, Hp2;
  Hr1 << F(2,1)-w1.y()*F(2,2), w1.x()*F(2,2)-F(2,1), 0.f,
          F(2,0)-w1.x()*F(2,2), F(2,1)-w1.y()*F(2,2), F(2,2)+vc,
          0.f, 0.f, 1.f;
  Hr2 << F(1,2)-w2.y()*F(2,2), w2.x()*F(2,2)-F(0,2), 0.f,
          F(0,2)-w2.x()*F(2,2), F(1,2)-w2.y()*F(2,2), vc,
          0.f, 0.f, 1.f;
+
+ Hp1 << 1.f, 0.f, 0.f,
+         0.f, 1.f, 0.f,
+         w1.x(), w1.y(), 1.f;
+ Hp1 << 1.f, 0.f, 0.f,
+         0.f, 1.f, 0.f,
+         w2.x(), w2.y(), 1.f;
 
  //Output
  //m_leftImageRectified;
