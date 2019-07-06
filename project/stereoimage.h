@@ -41,6 +41,10 @@ class StereoImage {
         std::vector<std::pair<int, int> > getFeatureMatches() const;
         float *getDepthImage();
 
+        // SETTERS
+        void setLeftImageRectified(Pixel* value);
+        void setRightImageRectified(Pixel* value);
+
 private:
         CameraSensor *sensor;
 

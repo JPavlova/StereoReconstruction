@@ -21,7 +21,7 @@ float roundToDecimal(float number, int decimalPlace) {
 bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename) {
     // using freeimage ideally
     FreeImage_Initialise();
-    FIBITMAP * bitmap = FreeImage_Allocate(width, height, 32);
+    FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
     RGBQUAD color;
 
     if (!bitmap) {
@@ -42,16 +42,19 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         }
     }
 
-    float factor = 1.0f / (maximum - minimum);
+    float factor = 0.0f;
+    if ((maximum - minimum) > 0.000001f) {
+        factor = 1.0f / (maximum - minimum);
+    }
 
     int i = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             i = h * width + w;
             current = depthImage[i];
-            color.rgbRed = current * factor;
-            color.rgbGreen = current * factor;
-            color.rgbBlue = current * factor;
+            color.rgbRed = (BYTE) current * factor * 255;
+            color.rgbGreen = (BYTE) current * factor * 255;
+            color.rgbBlue = (BYTE) current * factor * 255;
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }

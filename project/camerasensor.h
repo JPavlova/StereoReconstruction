@@ -151,6 +151,12 @@ public:
     Eigen::Matrix3f getRightIntrinsics() {
         return m_leftIntrinsics;
     }
+    Eigen::Matrix3f getLeftExtrinsics(){
+        return m_leftExtrinsics;
+    }
+    Eigen::Matrix4f getRightExtrinsics(){
+        return m_rightExtrinsics;
+    }
     unsigned int getLeftImageWidth() {
         return m_leftImageWidth;
     }

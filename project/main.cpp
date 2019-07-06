@@ -1,10 +1,14 @@
 #include <iostream>
 #include <vector>
+#include <random>
 
 #include "stereoimage.h"
 #include "prerequisites.h"
 #include "exporter.h"
 #include <FreeImage.h>
+#include "patchmatch.h"
+
+#define PATCH_SIZE 5
 
 // MAIN FILE TO RUN PIPELINE
 
@@ -55,24 +59,27 @@ int main(int argc, char *argv[])
         // Create StereoImage from current sensor frames
         StereoImage testImage(sensor.getLeftFrame(), sensor.getRightFrame(), &sensor);
 
+        int width = testImage.getLeftImageWidth();
+        int height = testImage.getLeftImageHeight();
+
         // -- Rectify
         // -- Patchmatch
+        PatchMatch patchMatch(testImage.getLeftImage(),testImage.getRightImage(),width,height,PATCH_SIZE);
+        int* disparity = patchMatch.computeDisparity();
 
 
         // part 4:
 
         // point cloud/ backprojection
 
-        int width = testImage.getLeftImageWidth();
-        int height = testImage.getLeftImageHeight();
 
         Vertex *vertices = new Vertex[width * height];
         testImage.backproject_frame(vertices);
 
         // export point cloud to .off
+        std::cout << "random number: " << (std::rand() % 100) / 10.0f << std::endl;
+        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
         //writeMesh(vertices, width, height, "./pointcloud.off");
-        //writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
-
     }
 
 
