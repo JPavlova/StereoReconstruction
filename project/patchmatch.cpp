@@ -94,8 +94,15 @@ int PatchMatch::evalNeighborhood(int center_left, int center_right)
 
     for (int i = -m_patchSize / 2; i <= m_patchSize / 2; i++){
         for (int j = -m_patchSize / 2; j <= m_patchSize / 2; j++){
-            Vector4i pixelDistance = m_leftImage[center_left + i * m_width + j].cast<int>() - m_rightImage[center_right + i * m_width + j].cast<int>();
-            totalDistance += pixelDistance.dot(pixelDistance);
+
+            Pixel null = Pixel(-1, -1, -1, -1); // check if pixel is filled
+
+            if(m_leftImage[center_left + i * m_width + j] != null && m_rightImage[center_right + i * m_width + j] != null) {
+
+                Vector4i pixelDistance = m_leftImage[center_left + i * m_width + j].cast<int>() - m_rightImage[center_right + i * m_width + j].cast<int>();
+                totalDistance += pixelDistance.dot(pixelDistance);
+
+            }
         }
     }
 

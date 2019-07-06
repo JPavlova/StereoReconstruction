@@ -151,7 +151,7 @@ public:
     Eigen::Matrix3f getRightIntrinsics() {
         return m_leftIntrinsics;
     }
-    Eigen::Matrix3f getLeftExtrinsics(){
+    Eigen::Matrix4f getLeftExtrinsics(){
         return m_leftExtrinsics;
     }
     Eigen::Matrix4f getRightExtrinsics(){
