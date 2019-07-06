@@ -19,7 +19,7 @@ typedef unsigned char BYTE;
 // Filesystem namespace as abbreveation
 namespace fs = std::experimental::filesystem;
 
-const std::regex IMAGE_NAME_REGEX (".*im[0-9]+[.]png");
+const std::regex IMAGE_NAME_REGEX (".*im[0-9]+_downscaled[.]png");
 
 class CameraSensor {
 public:
@@ -44,10 +44,10 @@ public:
 
         //// PARAMETERS ADAPTED FOR EASY DATASET
 
-        m_leftImageWidth = 2864;
-        m_leftImageHeight = 1924;
-        m_rightImageWidth = 2864;
-        m_rightImageHeight = 1924;
+        m_leftImageWidth = 640;
+        m_leftImageHeight = 430;
+        m_rightImageWidth = 640;
+        m_rightImageHeight = 430;
 
         m_leftIntrinsics << 2945.377f, 0.f, 1284.862f,
                             0.0f, 2945.377f, 954.52f,

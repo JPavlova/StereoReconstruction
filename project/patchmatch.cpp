@@ -2,8 +2,9 @@
 #include <cmath>
 #include <Eigen/Eigen>
 #include <cstdlib>
+#include "prerequisites.h"
 
-#define NUM_ITERATIONS 5
+#define NUM_ITERATIONS 1
 #define ALPHA 0.5
 
 PatchMatch::PatchMatch(Pixel *leftImage, Pixel *rightImage, int width, int height, int patchSize) : m_leftImage(leftImage),
@@ -33,7 +34,7 @@ int *PatchMatch::computeDisparity()
                 }
 
                 randomSearch(x, y, idx_disparity, idx_original);
-
+                progressBar(((float)y * (float)m_width_disparity + (float)x) / ((float) m_height_disparity * (float) m_width_disparity), "PM Iteration " + std::to_string(i+1));
             }
         }
     }

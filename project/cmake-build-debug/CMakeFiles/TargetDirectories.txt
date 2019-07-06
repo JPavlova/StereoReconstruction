@@ -1,3 +1,0 @@
-/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/rebuild_cache.dir
-/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/stereo_reconstruction.dir
-/home/wayl/3D Scanning and Motion Capture/Project/StereoReconstruction/project/cmake-build-debug/CMakeFiles/edit_cache.dir
