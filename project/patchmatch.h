@@ -14,8 +14,8 @@ public:
 
 private:
     int evalNeighborhood(int center_left, int center_right);
-    void propagate(int idx_disparity, int idx_original);
-    void randomSearch(int x, int y, int idx_disparity, int idx_original);
+    void propagate(int idx);
+    void randomSearch(int row, int idx);
 
     int getDisparityWidth();
     int getDisparityHeight();
