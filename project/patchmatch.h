@@ -17,13 +17,10 @@ private:
     void propagate(int idx);
     void randomSearch(int row, int idx);
 
-    int getDisparityWidth();
-    int getDisparityHeight();
-
     Pixel *m_leftImage;
     Pixel *m_rightImage;
     int *m_disparity;
-    int m_width, m_height, m_patchSize, m_width_disparity, m_height_disparity;
+    int m_width, m_height, m_patchSize;
 };
 
 #endif

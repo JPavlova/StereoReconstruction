@@ -31,7 +31,7 @@ int *PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
         for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
-            for (int x = m_patchSize / 2; x < m_width_disparity - m_patchSize / 2; x++){
+            for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
 
                 int idx = y * m_width + x;
 
@@ -67,7 +67,7 @@ void PatchMatch::randomSearch(int row, int idx)
 {
     int best_neighborhood = evalNeighborhood(idx, m_disparity[idx]);
     int best_disparity = m_disparity[idx];
-    double search_radius = ALPHA * m_width_disparity;
+    double search_radius = ALPHA * m_width;
 
     while (search_radius > 1){
 
@@ -89,16 +89,6 @@ void PatchMatch::randomSearch(int row, int idx)
     }
 
     m_disparity[idx] = best_disparity;
-}
-
-int PatchMatch::getDisparityWidth()
-{
-    return m_width_disparity;
-}
-
-int PatchMatch::getDisparityHeight()
-{
-    return m_height_disparity;
 }
 
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
