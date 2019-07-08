@@ -45,7 +45,7 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
+    std::string dataDir = "../";
     CameraSensor sensor;
 
     if(!sensor.Init(dataDir)) {
@@ -57,14 +57,16 @@ int main(int argc, char *argv[])
     while(sensor.ProcessNextFrame()) {
 
         // Create StereoImage from current sensor frames
-        StereoImage testImage(sensor.getLeftFrame(), sensor.getRightFrame(), &sensor);
+        StereoImage testImage(&sensor);
+
+        testImage.rectify();
 
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
 
         // -- Rectify
         // -- Patchmatch
-        PatchMatch patchMatch(testImage.getLeftImage(),testImage.getRightImage(),width,height,PATCH_SIZE);
+        PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);
         int* disparity = patchMatch.computeDisparity();
 
 

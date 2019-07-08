@@ -12,7 +12,7 @@ using namespace Eigen;
 
 class StereoImage {
     public:
-        StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor *sensor);
+        StereoImage(CameraSensor *sensor);
         ~StereoImage()
         {
             SAFE_DELETE_ARRAY(m_leftImage);
@@ -36,9 +36,8 @@ class StereoImage {
         int getRightImageHeight() const;
         Pixel *getLeftImageRectified() const;
         Pixel *getRightImageRectified() const;
-        std::vector<Feature> getLeftFeatures() const;
-        std::vector<Feature> getRightFeatures() const;
-        std::vector<std::pair<int, int> > getFeatureMatches() const;
+        int *getLeftImageLookup() const;
+        int *getRightImageLookup() const;
         float *getDepthImage();
 
         // SETTERS
@@ -61,12 +60,9 @@ private:
         Pixel* m_leftImageRectified;
         Pixel* m_rightImageRectified;
 
-        // individual features
-        std::vector<Feature> m_leftFeatures;
-        std::vector<Feature> m_rightFeatures;
-
-        // tuple list of features that match
-        std::vector<std::pair<int, int>> m_featureMatches;
+        // index lookup tables
+        int* m_leftImageLookup;
+        int* m_rightImageLookup;
 
         // final output, empty at the beginning
         float* m_depthImage;

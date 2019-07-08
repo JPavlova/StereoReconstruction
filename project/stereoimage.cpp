@@ -18,8 +18,12 @@
  * @param rightImage : BYTE * array
  * @param sensor : CameraSensor * object
  */
-StereoImage::StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor * sensor) : sensor(sensor)
+StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
 {
+
+    BYTE * leftImage = sensor->getLeftFrame();
+    BYTE * rightImage = sensor->getRightFrame();
+
     m_leftImageWidth = sensor->getLeftImageWidth();
     m_leftImageHeight = sensor->getLeftImageHeight();
     m_rightImageWidth = sensor->getRightImageWidth();
@@ -40,6 +44,14 @@ StereoImage::StereoImage(BYTE * leftImage, BYTE * rightImage, CameraSensor * sen
 
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageRectified[idx] = Pixel(-1, -1, -1, -1);
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageRectified[idx] = Pixel(-1, -1, -1, -1);
+
+    // set up lookup arrays
+    m_leftImageLookup = new int[m_leftImageWidth * m_leftImageHeight];
+    m_rightImageLookup = new int[m_rightImageWidth * m_rightImageHeight];
+
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageLookup[idx] = -1;
+    for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageLookup[idx] = -1;
+
 
 }
 
@@ -119,7 +131,7 @@ Matrix3f decomposeMatrix(Matrix3f D)
     return D;
 }
 
-Matrix3f skewSymmetricMatrix(Vector3f vector) {
+Matrix3f skewSymmetricMatrix(Vector3f& vector) {
     Matrix3f m;
     m << 0.f, -vector.z(), vector.y(),
             vector.z(), 0.f, -vector.x(),
@@ -146,7 +158,7 @@ void StereoImage::rectify()
     //        0.f, Rt(1,1) ,0.f,
     //         0.f, 0.f, Rt(2,2);
     Vector3f t = Rt.block<3, 1>(0, 3);                                //Transformationsvector
-//    t << Rt(0,3), Rt(1,3), Rt(2,3);
+    //    t << Rt(0,3), Rt(1,3), Rt(2,3);
 
     Matrix3f F;
 
@@ -211,25 +223,66 @@ void StereoImage::rectify()
     Hp1 << 1.f, 0.f, 0.f,
             0.f, 1.f, 0.f,
             w1.x(), w1.y(), 1.f;
-    Hp1 << 1.f, 0.f, 0.f,
+    Hp2 << 1.f, 0.f, 0.f,
             0.f, 1.f, 0.f,
             w2.x(), w2.y(), 1.f;
+
+    Matrix3f inverseTransform1 = (Hr1 * Hp1).inverse();
+    Matrix3f inverseTransform2 = (Hr2 * Hp2).inverse();
 
     // Pixel* v1;
     // Pixel* v2;
 
     //Output: try projection without opencv
-    for (int col = 0; col < width; ++col) {
-        for (int row = 0; row < height; ++row) {
-            Vector3f transformedPixelLeft = Hr1 * Hp1 * Vector3f((float)col - (float)width/2, (float)row - (float)height/2, 1.f); // (0,0) in middle
-            int newRow = (int)(transformedPixelLeft.y()+(float)height/2); // (0,0) top left
-            int newCol = (int)(transformedPixelLeft.x()+(float)width/2);
-            m_leftImageRectified[newRow *height + newCol] = m_leftImage[row * height + col];
+    for (int row = 0; row < height; ++row) {
+        for (int col = 0; col < width; ++col) {
 
-            Vector3f transformedPixelRight = Hr2 * Hp2 * Vector3f((float)col - (float)width/2, (float)row - (float)height/2, 1.f); // (0,0) in middle
-            newRow = (int)(transformedPixelRight.y()+(float)height/2); // (0,0) top left
-            newCol = (int)(transformedPixelRight.x()+(float)width/2);
-            m_rightImageRectified[newRow * height + newCol] = m_rightImage[row * height + col];
+            Vector3f outputPixel = Vector3f((float)col - (float)width/2, (float)row - (float)height/2, 1.f); // shifted so (0,0) in middle
+
+            auto affineTrans = [&](Vector3f& transform, int* lookup, Pixel* image, Pixel* rectified){
+                if(0 <= transform[0] && transform[0] <= (float)width && 0 <= transform[1] && transform[1] <= (float)height) {
+                    int newRow = (int) transform[1];
+                    int newCol = (int) transform[0];
+                    lookup[row * width + col] = newRow * width + newCol;
+
+                    // Bilinear interpolation for values (TODO check if just that simple in RGB)
+                    float r = 0.f, g = 0.f, b = 0.f, a = 0.f;
+                    float a_ = transform[1] - (float)(int)transform[1]; // dist to up
+                    float b_ = transform[0] - (float)(int)transform[0]; // dist to left
+
+                    for (int row_ = -1; row_ <= 1; ++row_) {
+                        for (int col_ = -1; col_ <= 1; ++col_) {
+
+                            if( fabs((float)row_ + 0.5f - a_) < 1.f && fabs((float)col_ + 0.5f - b_) < 1.f && // check if closer pixel
+                                    0 < newCol + col_ && newCol + col_ < width && 0 < newRow + row_ && newRow + row_ < height){
+
+                                float f = fabs((float)row_ + 0.5f - a_) * fabs((float)col_ + 0.5f - b_);
+
+                                r += f * image[(newRow + row_) * width + newCol + col_][0];
+                                g += f * image[(newRow + row_) * width + newCol + col_][1];
+                                b += f * image[(newRow + row_) * width + newCol + col_][2];
+                                a += f * image[(newRow + row_) * width + newCol + col_][3];
+                            }
+                        }
+                    }
+
+                    rectified[row * width + col] = Pixel((int)r, (int)g, (int)b, (int)a);
+
+                }
+            };
+
+            Vector3f L = inverseTransform1 * outputPixel;
+            L[0] += (float)width/2; // shift back so (0,0) top left
+            L[1] += (float)height/2;
+
+            affineTrans(L, m_leftImageLookup, m_leftImage, m_leftImageRectified);
+
+
+            Vector3f R = inverseTransform2 * outputPixel;
+            R[0] += (float)width/2;
+            R[1] += (float)height/2;
+
+            affineTrans(R, m_rightImageLookup, m_rightImage, m_rightImageRectified);
         }
     }
 
@@ -284,19 +337,14 @@ Pixel *StereoImage::getRightImageRectified() const
     return m_rightImageRectified;
 }
 
-std::vector<Feature> StereoImage::getLeftFeatures() const
+int *StereoImage::getLeftImageLookup() const
 {
-    return m_leftFeatures;
+    return m_leftImageLookup;
 }
 
-std::vector<Feature> StereoImage::getRightFeatures() const
+int *StereoImage::getRightImageLookup() const
 {
-    return m_rightFeatures;
-}
-
-std::vector<std::pair<int, int> > StereoImage::getFeatureMatches() const
-{
-    return m_featureMatches;
+    return m_rightImageLookup;
 }
 
 float* StereoImage::getDepthImage() {
@@ -312,3 +360,4 @@ void StereoImage::setRightImageRectified(Pixel *value)
 {
     m_rightImageRectified = value;
 }
+

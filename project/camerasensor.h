@@ -44,35 +44,51 @@ public:
 
         //// PARAMETERS ADAPTED FOR EASY DATASET
 
-        m_leftImageWidth = 640;
-        m_leftImageHeight = 430;
-        m_rightImageWidth = 640;
-        m_rightImageHeight = 430;
+        //        m_leftImageWidth = 640; -> are set when read in below (processNextFrame, FreeImage function)
+        //        m_leftImageHeight = 430;
+        //        m_rightImageWidth = 640;
+        //        m_rightImageHeight = 430;
 
         m_leftIntrinsics << 2945.377f, 0.f, 1284.862f,
-                            0.0f, 2945.377f, 954.52f,
-                            0.0f, 0.0f, 1.f;
+                0.0f, 2945.377f, 954.52f,
+                0.0f, 0.0f, 1.f;
         m_leftExtrinsics.setIdentity();
 
         m_rightIntrinsics << 2945.377f, 0.0f, 1455.543f,
-                             0.0f, 2945.377f, 954.52f,
-                             0.0f, 0.0f, 1.0f;
+                0.0f, 2945.377f, 954.52f,
+                0.0f, 0.0f, 1.0f;
         m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, 178.232f, // translated along x axis by 178.232mm
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
+                0.0f, 1.0f, 0.0f, 0.0f,
+                0.0f, 0.0f, 1.0f, 0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f;
 
+        // set index to start with
+        m_arraySet = false;
+        m_currentIdx = -1;
+        return true;
+
+    }
+
+    bool setArrays(int l_w, int l_h, int r_w, int r_h) {
         // create arrays and read in dummy values
+        if (m_arraySet) {
+            SAFE_DELETE_ARRAY(m_leftFrame);
+            SAFE_DELETE_ARRAY(m_rightFrame);
+        }
+
+        m_arraySet = true;
+
+        m_leftImageWidth = l_w;
+        m_leftImageHeight = l_h;
+
+        m_rightImageWidth = r_w;
+        m_rightImageHeight = r_h;
+
+
         m_leftFrame = new BYTE[4 * m_leftImageWidth * m_leftImageHeight];
         for (unsigned int i = 0; i < 4 * m_leftImageWidth * m_leftImageHeight; i++) m_leftFrame[i] = 255;
         m_rightFrame = new BYTE[4 * m_rightImageWidth * m_rightImageHeight];
         for (unsigned int i = 0; i < 4 * m_rightImageWidth * m_rightImageHeight; i++) m_rightFrame[i] = 255;
-
-        // set index to start with
-
-        m_currentIdx = -1;
-        return true;
-
     }
 
     /**
@@ -128,12 +144,19 @@ public:
 
         // read in both images as BYTE arrays
 
-        FreeImageB leftImage;
+        FreeImageB leftImage, rightImage;
         leftImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].first);
-        memcpy(m_leftFrame, leftImage.data, 4 * m_leftImageWidth * m_leftImageHeight);
-
-        FreeImageB rightImage;
         rightImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].second);
+
+        // (re)initialize arrays in case needed
+        if(!m_arraySet ||
+                leftImage.w != m_leftImageWidth || leftImage.h != m_leftImageHeight ||
+                rightImage.w != m_rightImageWidth || rightImage.h != m_rightImageHeight) {
+
+            setArrays(leftImage.w, leftImage.h, rightImage.w, rightImage.h);
+        }
+
+        memcpy(m_leftFrame, leftImage.data, 4 * m_leftImageWidth * m_leftImageHeight);
         memcpy(m_rightFrame, rightImage.data, 4 * m_rightImageWidth * m_rightImageHeight);
 
         return true;
@@ -177,6 +200,8 @@ private:
 
     // current frame index
     int m_currentIdx;
+
+    bool m_arraySet;
 
     // color images
     BYTE* m_leftFrame;
