@@ -11,6 +11,12 @@ public:
     /*Images must be rectified
     Patch size is the distance from the center to the border of each patch, i.e. for 3x3 patches patch size would be 1 (must be odd!)*/
     PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *rightImage, int width, int height, int patchSize);
+
+    ~PatchMatch(){
+        SAFE_DELETE_ARRAY(m_disparity);
+        SAFE_DELETE_ARRAY(m_neighborhood);
+    }
+
     int *computeDisparity();
 
 private:
