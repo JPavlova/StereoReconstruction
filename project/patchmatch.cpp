@@ -3,26 +3,31 @@
 #include <Eigen/Eigen>
 #include <cstdlib>
 #include "prerequisites.h"
+#include <optional>
 
 #define DISPARITY_INVALID -1
+#define NEIGHBORHOOD_INVALID INT_MAX
 
 #define NUM_ITERATIONS 1
 #define ALPHA 0.5
 
-PatchMatch::PatchMatch(Pixel *leftImage, Pixel *rightImage, int width, int height, int patchSize) : m_leftImage(leftImage),
+PatchMatch::PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *rightImage, int width, int height, int patchSize) : m_leftImage(leftImage),
                                                                                                     m_rightImage(rightImage),
                                                                                                     m_width(width),
                                                                                                     m_height(height),
                                                                                                     m_patchSize(patchSize)
 {
     m_disparity = new int[m_width * m_height];
+    m_neighborhood = new int[m_width * m_height];
 
     for(int i = 0; i < m_width * m_height; i++){
 
-        if(m_leftImage[i] == invalidPixel){
-            m_disparity[i] == DISPARITY_INVALID;
+        if(!m_leftImage[i].has_value()){
+            m_disparity[i] = DISPARITY_INVALID;
+            m_neighborhood[i] = NEIGHBORHOOD_INVALID;
         } else {
-            m_disparity[i] == i;
+            m_disparity[i] = i;
+            m_neighborhood[i] = evalNeighborhood(i, i);
         }
     }
 }
@@ -55,18 +60,14 @@ int *PatchMatch::computeDisparity()
 
 void PatchMatch::propagate(int idx)
 {
-    int leftAssociation = evalNeighborhood(idx, m_disparity[idx - 1]);
-    int centerAssociation = evalNeighborhood(idx, m_disparity[idx]);
-
-    if (leftAssociation < centerAssociation){
+    if (m_neighborhood[idx - 1] < m_neighborhood[idx]){
+        m_neighborhood[idx] = evalNeighborhood(idx, m_disparity[idx - 1]);
         m_disparity[idx] = m_disparity[idx - 1];
     }
 }
 
 void PatchMatch::randomSearch(int row, int idx)
 {
-    int best_neighborhood = evalNeighborhood(idx, m_disparity[idx]);
-    int best_disparity = m_disparity[idx];
     double search_radius = ALPHA * m_width;
 
     while (search_radius > 1){
@@ -82,13 +83,11 @@ void PatchMatch::randomSearch(int row, int idx)
 
         int neighborhood = evalNeighborhood(idx, tested_disparity);
 
-        if (best_neighborhood > neighborhood){
-            best_neighborhood = neighborhood;
-            best_disparity = tested_disparity;
+        if (m_neighborhood[idx] > neighborhood){
+            m_neighborhood[idx] = neighborhood;
+            m_disparity[idx] = tested_disparity;
         }
     }
-
-    m_disparity[idx] = best_disparity;
 }
 
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
@@ -101,11 +100,11 @@ int PatchMatch::evalNeighborhood(int center_left, int center_right)
             int idx_left = center_left + i * m_width + j;
             int idx_right = center_right + i * m_width + j;
 
-            if(m_leftImage[idx_left] == invalidPixel || m_rightImage[idx_right] == invalidPixel){
-                return INT_MAX;
+            if(!m_leftImage[idx_left].has_value() || !m_rightImage[idx_right].has_value()){
+                return NEIGHBORHOOD_INVALID;
             }
 
-            Vector4i pixelDistance = m_leftImage[idx_left].cast<int>() - m_rightImage[idx_right].cast<int>();
+            Vector4i pixelDistance = m_leftImage[idx_left].value().cast<int>() - m_rightImage[idx_right].value().cast<int>();
             totalDistance += pixelDistance.dot(pixelDistance);
         }
     }

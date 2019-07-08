@@ -65,9 +65,9 @@ int main(int argc, char *argv[])
         int height = testImage.getLeftImageHeight();
 
         // -- Rectify
-        // -- Patchmatch
-        PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);
-        int* disparity = patchMatch.computeDisparity();
+        // -- Patchmatch. For execution, the images need to be of type optional<Pixel> *
+        //PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);
+        //int* disparity = patchMatch.computeDisparity();
 
 
         // part 4:
