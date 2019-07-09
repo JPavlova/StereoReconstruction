@@ -5,34 +5,46 @@
 #include "prerequisites.h"
 #include <optional>
 
-#define DISPARITY_INVALID -1
+#define MATCH_INVALID -1
+#define DISPARITY_INVALID -1.f
 #define NEIGHBORHOOD_INVALID INT_MAX
 
 #define NUM_ITERATIONS 1
 #define ALPHA 0.5
 
-PatchMatch::PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *rightImage, int width, int height, int patchSize) : m_leftImage(leftImage),
-                                                                                                    m_rightImage(rightImage),
+/**
+ * @brief PatchMatch::PatchMatch
+ * @param stereoImage: input whole image, will read all necessary information
+ * @param width
+ * @param height
+ * @param patchSize
+ */
+PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patchSize) : m_stereoImage(stereoImage),
+                                                                                                    m_leftImage(stereoImage->getLeftImageRectified()),
+                                                                                                    m_rightImage(stereoImage->getRightImageRectified()),
+                                                                                                    m_leftLookup(stereoImage->getLeftImageLookup()),
+                                                                                                    m_rightLookup(stereoImage->getRightImageLookup()),
                                                                                                     m_width(width),
                                                                                                     m_height(height),
                                                                                                     m_patchSize(patchSize)
 {
-    m_disparity = new int[m_width * m_height];
+    m_matches = new int[m_width * m_height];
+    m_disparity = new float[m_width * m_height];
     m_neighborhood = new int[m_width * m_height];
 
     for(int i = 0; i < m_width * m_height; i++){
 
         if(!m_leftImage[i].has_value()){
-            m_disparity[i] = DISPARITY_INVALID;
+            m_matches[i] = MATCH_INVALID;
             m_neighborhood[i] = NEIGHBORHOOD_INVALID;
         } else {
-            m_disparity[i] = i;
+            m_matches[i] = i;
             m_neighborhood[i] = evalNeighborhood(i, i);
         }
     }
 }
 
-int *PatchMatch::computeDisparity()
+void PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
         for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
@@ -40,7 +52,7 @@ int *PatchMatch::computeDisparity()
 
                 int idx = y * m_width + x;
 
-                if(m_disparity[idx] == DISPARITY_INVALID){
+                if(m_matches[idx] == MATCH_INVALID){
                     continue;
                 }
 
@@ -55,14 +67,35 @@ int *PatchMatch::computeDisparity()
         }
     }
 
-    return m_disparity;
+    // Compute disparity based on original image indices
+    for(int idx = 0; idx < m_width * m_height; idx++) {
+
+        // For invalid matches set disparity to -1!
+        if(m_matches[idx] == MATCH_INVALID) {
+            m_disparity[idx] = DISPARITY_INVALID;
+            continue;
+        }
+
+        // TODO: In case disparity is not just difference of x values, rewrite
+
+        int idxLeft = idx;
+        int idxRight = m_matches[idx];
+
+        int colLeft = idxLeft % m_width;
+        int colRight = idxRight % m_width;
+
+        m_disparity[idx] = (float) colRight - (float) colLeft;
+
+    }
+
+    m_stereoImage->setDisparity(m_disparity);
 }
 
 void PatchMatch::propagate(int idx)
 {
     if (m_neighborhood[idx - 1] < m_neighborhood[idx]){
-        m_neighborhood[idx] = evalNeighborhood(idx, m_disparity[idx - 1]);
-        m_disparity[idx] = m_disparity[idx - 1];
+        m_neighborhood[idx] = evalNeighborhood(idx, m_matches[idx - 1]);
+        m_matches[idx] = m_matches[idx - 1];
     }
 }
 
@@ -73,7 +106,7 @@ void PatchMatch::randomSearch(int row, int idx)
     while (search_radius > 1){
 
         double r = 2.0 * rand() / RAND_MAX - 1;
-        int tested_disparity = m_disparity[idx] + ceil(search_radius * r);
+        int tested_disparity = m_matches[idx] + ceil(search_radius * r);
         search_radius *= ALPHA;
         int tested_disparity_col = tested_disparity - row * m_width;
 
@@ -85,7 +118,7 @@ void PatchMatch::randomSearch(int row, int idx)
 
         if (m_neighborhood[idx] > neighborhood){
             m_neighborhood[idx] = neighborhood;
-            m_disparity[idx] = tested_disparity;
+            m_matches[idx] = tested_disparity;
         }
     }
 }

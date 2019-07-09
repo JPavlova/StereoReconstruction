@@ -36,14 +36,14 @@ StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
     // read in BYTE pixel values as Pixel (Vectur4uc)
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImage[idx] = Pixel(leftImage[4*idx], leftImage[4*idx+1], leftImage[4*idx+2], leftImage[4*idx+3]);
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImage[idx] = Pixel(rightImage[4*idx], rightImage[4*idx+1], rightImage[4*idx+2], rightImage[4*idx+3]);
-    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = (std::rand() % 100) / 10.0f; // random initialization
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = MINF;
 
     // set up arrays for left/right rectified image, fill with Pixel(-1,-1,-1,-1)
-    m_leftImageRectified = new Pixel[m_leftImageWidth * m_leftImageHeight];
-    m_rightImageRectified = new Pixel[m_rightImageWidth * m_rightImageHeight];
+    m_leftImageRectified = new std::optional<Pixel>[m_leftImageWidth * m_leftImageHeight];
+    m_rightImageRectified = new std::optional<Pixel>[m_rightImageWidth * m_rightImageHeight];
 
-    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageRectified[idx] = Pixel(-1, -1, -1, -1);
-    for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageRectified[idx] = Pixel(-1, -1, -1, -1);
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageRectified[idx] = std::nullopt;
+    for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageRectified[idx] = std::nullopt;
 
     // set up lookup arrays
     m_leftImageLookup = new int[m_leftImageWidth * m_leftImageHeight];
@@ -51,8 +51,6 @@ StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
 
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageLookup[idx] = -1;
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageLookup[idx] = -1;
-
-
 }
 
 /**
@@ -167,6 +165,7 @@ void StereoImage::rectify()
     Vector3f tmpv = K1*R.transpose()*t;
     Matrix3f tmpm = skewSymmetricMatrix(tmpv);
 
+    // remark: other source F = K^(-T) * ssM(T) * R * K'^(-1)
     F = K2.inverse().transpose()*R*K1.transpose()*tmpm;
 
     /*Berechne Epipolare Linien*/
@@ -239,7 +238,7 @@ void StereoImage::rectify()
 
             Vector3f outputPixel = Vector3f((float)col - (float)width/2, (float)row - (float)height/2, 1.f); // shifted so (0,0) in middle
 
-            auto affineTrans = [&](Vector3f& transform, int* lookup, Pixel* image, Pixel* rectified){
+            auto affineTrans = [&](Vector3f& transform, int* lookup, Pixel* image, std::optional<Pixel>* rectified){
                 if(0 <= transform[0] && transform[0] <= (float)width && 0 <= transform[1] && transform[1] <= (float)height) {
                     int newRow = (int) transform[1];
                     int newCol = (int) transform[0];
@@ -296,37 +295,39 @@ void StereoImage::rectify()
 
 void StereoImage::disparityToDepth()
 {
-    int* recL = StereoImage::m_leftImageLookup;
-    int *recR = StereoImage::m_rightImageLookup;
+    //    int* recL = StereoImage::m_leftImageLookup;
+    //    int *recR = StereoImage::m_rightImageLookup;
 
-    Pixel* imgL =  getLeftImage();
-    Pixel* imgR = getRightImage();
+    //    Pixel* imgL =  getLeftImage();
+    //    Pixel* imgR = getRightImage();
 
     float f =  2945.377f;           //needs to be edit after own camera calib
     float b = 178.232f;             //values from calib.txt
     float doffs = 170.681f;
-    float d;
+//    float d;
 
-    float* z;
+//    float* z;
 
-    /* Method Draft
-    //get pixels from non-rectified images
-    for(int i = 0; i< matches.size(); i++)
+    // Method Draft
+    // get pixels from non-rectified images
+    for(int i = 0; i< m_leftImageWidth * m_leftImageHeight; i++)
     {
         //calculate depth
         //z = baseline * f/ (d + doffs)
         // d = xl-xr
-        int tmp1 = recL[matches[i].x()];
-        int tmp2 = recL[matches[i].y()];
+        //        int tmp1 = recL[matches[i].x()];
+        //        int tmp2 = recL[matches[i].y()];
 
-        d= imgL[tmp1].x() - imgR[tmp2].x();
-        z[i] =  b*f/(d+ doffs);
+        //        d = imgL[tmp1].x() - imgR[tmp2].x();
+        if (m_disparity[i] != -1.f) {
+            m_depthImage[i] =  b*f/(m_disparity[i] + doffs);
+        }
 
         //calculate x&y -> is this needed?
 
     }
 
-    */
+
 
 }
 
@@ -363,12 +364,12 @@ int StereoImage::getRightImageHeight() const
     return m_rightImageHeight;
 }
 
-Pixel *StereoImage::getLeftImageRectified() const
+std::optional<Pixel> *StereoImage::getLeftImageRectified() const
 {
     return m_leftImageRectified;
 }
 
-Pixel *StereoImage::getRightImageRectified() const
+std::optional<Pixel> *StereoImage::getRightImageRectified() const
 {
     return m_rightImageRectified;
 }
@@ -387,13 +388,7 @@ float* StereoImage::getDepthImage() {
     return m_depthImage;
 }
 
-//SETTERS
-void StereoImage::setLeftImageRectified(Pixel* value)
+void StereoImage::setDisparity(float *disparity)
 {
-    m_leftImageRectified = value;
+    m_disparity = disparity;
 }
-void StereoImage::setRightImageRectified(Pixel* value)
-{
-    m_rightImageRectified = value;
-}
-

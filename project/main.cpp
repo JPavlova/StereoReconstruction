@@ -45,7 +45,7 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-    std::string dataDir = "../";
+    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
     CameraSensor sensor;
 
     if(!sensor.Init(dataDir)) {
@@ -56,19 +56,20 @@ int main(int argc, char *argv[])
     // Sensor loop over all frames
     while(sensor.ProcessNextFrame()) {
 
-        // Create StereoImage from current sensor frames
+        // -- create StereoImage from current sensor frames
         StereoImage testImage(&sensor);
 
+        // -- Rectify
         testImage.rectify();
+
+
+        // -- Patchmatch
 
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
 
-        // -- Rectify
-        // -- Patchmatch. For execution, the images need to be of type optional<Pixel> *
-        //PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);
-        //int* disparity = patchMatch.computeDisparity();
-
+        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
+        patchMatch.computeDisparity(); // directly sets disparity for stereoImage
 
         // part 4:
 

@@ -35,15 +35,13 @@ class StereoImage {
         int getLeftImageHeight() const;
         int getRightImageWidth() const;
         int getRightImageHeight() const;
-        Pixel *getLeftImageRectified() const;
-        Pixel *getRightImageRectified() const;
+        std::optional<Pixel> *getLeftImageRectified() const;
+        std::optional<Pixel> *getRightImageRectified() const;
         int *getLeftImageLookup() const;
         int *getRightImageLookup() const;
         float *getDepthImage();
 
-        // SETTERS
-        void setLeftImageRectified(Pixel* value);
-        void setRightImageRectified(Pixel* value);
+        void setDisparity(float *disparity);
 
 private:
         CameraSensor *sensor;
@@ -58,12 +56,15 @@ private:
         int m_rightImageHeight;
 
         // empty at beginning, filled with a rectified copy of the image
-        Pixel* m_leftImageRectified;
-        Pixel* m_rightImageRectified;
+        std::optional<Pixel>* m_leftImageRectified;
+        std::optional<Pixel>* m_rightImageRectified;
 
         // index lookup tables
         int* m_leftImageLookup;
         int* m_rightImageLookup;
+
+        // disparities as floats
+        float* m_disparity;
 
         // final output, empty at the beginning
         float* m_depthImage;
