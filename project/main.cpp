@@ -56,22 +56,19 @@ int main(int argc, char *argv[])
     // Sensor loop over all frames
     while(sensor.ProcessNextFrame()) {
 
-        // -- create StereoImage from current sensor frames
+        // create StereoImage from current sensor frames
         StereoImage testImage(&sensor);
-
-        // -- Rectify
-        testImage.rectify();
-
-
-        // -- Patchmatch
-
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
 
+        // Rectify
+        testImage.rectify();
+        writeRGBImage((BYTE *) testImage.getLeftImage(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rgb.png");
+        writeRGBImage((BYTE *) testImage.getLeftImageRectified(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rect.png");
+
+        // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
         patchMatch.computeDisparity(); // directly sets disparity for stereoImage
-
-        // part 4:
 
         // point cloud/ backprojection
         Vertex *vertices = new Vertex[width * height];
