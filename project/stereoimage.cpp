@@ -188,7 +188,7 @@ void StereoImage::rectify()
             0.f, 0.f, 0.f;
 
     Matrix3f esx1 = skewSymmetricMatrix(e1);
-    Matrix3f esx2 = skewSymmetricMatrix(e2); // is this even needed?
+    Matrix3f esx2 = skewSymmetricMatrix(e2); // is this even needed? -> probably not (delete on next edit)
 
     A1 = esx1.transpose()*pp*esx1;
     B1 = esx1.transpose()*ppc*esx1;
@@ -294,6 +294,42 @@ void StereoImage::rectify()
 
 }
 
+void StereoImage::disparityToDepth()
+{
+    int* recL = StereoImage::m_leftImageLookup;
+    int *recR = StereoImage::m_rightImageLookup;
+
+    Pixel* imgL =  getLeftImage();
+    Pixel* imgR = getRightImage();
+
+    float f =  2945.377f;           //needs to be edit after own camera calib
+    float b = 178.232f;             //values from calib.txt
+    float doffs = 170.681f;
+    float d;
+
+    float* z;
+
+    /* Method Draft
+    //get pixels from non-rectified images
+    for(int i = 0; i< matches.size(); i++)
+    {
+        //calculate depth
+        //z = baseline * f/ (d + doffs)
+        // d = xl-xr
+        int tmp1 = recL[matches[i].x()];
+        int tmp2 = recL[matches[i].y()];
+
+        d= imgL[tmp1].x() - imgR[tmp2].x();
+        z[i] =  b*f/(d+ doffs);
+
+        //calculate x&y -> is this needed?
+
+    }
+
+    */
+
+}
+
 
 // GETTERS
 
@@ -356,7 +392,7 @@ void StereoImage::setLeftImageRectified(Pixel* value)
 {
     m_leftImageRectified = value;
 }
-void StereoImage::setRightImageRectified(Pixel *value)
+void StereoImage::setRightImageRectified(Pixel* value)
 {
     m_rightImageRectified = value;
 }

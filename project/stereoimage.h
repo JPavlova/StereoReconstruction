@@ -23,6 +23,7 @@ class StereoImage {
         }
         void rectify();
         void patchmatch();
+        void disparityToDepth();
 
         bool backproject_frame(Vertex *vertices);
 
