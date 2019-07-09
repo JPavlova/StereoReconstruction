@@ -74,13 +74,10 @@ int main(int argc, char *argv[])
         // part 4:
 
         // point cloud/ backprojection
-
-
         Vertex *vertices = new Vertex[width * height];
         testImage.backproject_frame(vertices);
 
         // export point cloud to .off
-        std::cout << "random number: " << (std::rand() % 100) / 10.0f << std::endl;
         writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
         //writeMesh(vertices, width, height, "./pointcloud.off");
     }
