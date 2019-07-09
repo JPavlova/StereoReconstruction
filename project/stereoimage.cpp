@@ -108,7 +108,7 @@ Matrix3f decomposeMatrix(Matrix3f D)
         for(int j = 0; j<i; j++)
         {
             sum = D(i,j);
-            for(int k = 0; k < j-1; k++)
+            for(int k = 0; k < j; k++)
             {
                 sum = sum - D(i,k)*D(j,k);
             }
