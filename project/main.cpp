@@ -59,27 +59,22 @@ int main(int argc, char *argv[])
         // Create StereoImage from current sensor frames
         StereoImage testImage(&sensor);
 
-        testImage.rectify();
-
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
 
         // -- Rectify
+        testImage.rectify();
+
         // -- Patchmatch. For execution, the images need to be of type optional<Pixel> *
         //PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);
         //int* disparity = patchMatch.computeDisparity();
 
 
-        // part 4:
-
         // point cloud/ backprojection
-
-
         Vertex *vertices = new Vertex[width * height];
         testImage.backproject_frame(vertices);
 
         // export point cloud to .off
-        std::cout << "random number: " << (std::rand() % 100) / 10.0f << std::endl;
         writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
         //writeMesh(vertices, width, height, "./pointcloud.off");
     }

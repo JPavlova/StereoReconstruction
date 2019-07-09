@@ -141,12 +141,12 @@ Matrix3f skewSymmetricMatrix(Vector3f& vector) {
 
 void StereoImage::rectify()
 {
-    int width = sensor -> getLeftImageHeight();
+    std::cout << "hello rectify" << std::endl;
+    int width = sensor->getLeftImageHeight();
     int height = sensor->getLeftImageWidth();
 
-
-    Pixel* leftImage =  getLeftImage();
-    Pixel* rightImage =  getRightImage();
+    Pixel* leftImage = getLeftImage();
+    Pixel* rightImage = getRightImage();
 
     /*Berechne Foundation Matrix F*/
 

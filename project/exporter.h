@@ -10,6 +10,43 @@ float roundToDecimal(float number, int decimalPlace) {
 }
 
 /**
+ * @brief writeRGBImage
+ * @param image         : image BYTE array, a format of RGBA is assumed, hence 4 BYTE per pixel.
+ * @param width         : in pixel
+ * @param height        : in pixel
+ * @param filename
+ * @return
+ */
+bool writeRGBImage(BYTE *image, int width, int height, const std::string& filename) {
+    FIBITMAP *bitmap = FreeImage_Allocate(width, height, 24);
+    RGBQUAD color;
+    if (!bitmap) {
+        exit(1);
+        std::cerr << "could not allocate memory for rgb image" << std::endl;
+    }
+
+    int i;
+    BYTE current;
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            i = (h * width + w) * 4; // Considered RGBA format of input
+            current = image[i];
+            color.rgbRed = image[i];
+            color.rgbGreen = image[i+1];
+            color.rgbBlue = image[i+2];
+            FreeImage_SetPixelColor(bitmap, w, h, &color);
+        }
+    }
+
+    if (FreeImage_Save(FIF_PNG, bitmap, filename.c_str(), 0))
+        std::cout << "Image successfully saved!" << std::endl;
+
+    FreeImage_DeInitialise();
+
+    return true;
+}
+
+/**
  * @brief writeDepthImage
  * @param depthImage
  * @param width
@@ -26,7 +63,7 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
 
     if (!bitmap) {
         exit(1);
-        std::cerr << "could not allocate image" << std::endl;
+        std::cerr << "could not allocate memory for depth image" << std::endl;
     }
     // minimal, maximal depth values
     float minimum = std::numeric_limits<float>::infinity();
