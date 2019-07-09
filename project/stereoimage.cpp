@@ -141,7 +141,6 @@ Matrix3f skewSymmetricMatrix(Vector3f& vector) {
 
 void StereoImage::rectify()
 {
-    std::cout << "hello rectify" << std::endl;
     int width = sensor->getLeftImageHeight();
     int height = sensor->getLeftImageWidth();
 

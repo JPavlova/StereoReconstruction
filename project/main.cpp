@@ -64,6 +64,8 @@ int main(int argc, char *argv[])
 
         // -- Rectify
         testImage.rectify();
+        writeRGBImage((BYTE *) testImage.getLeftImage(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rgb.png");
+        writeRGBImage((BYTE *) testImage.getLeftImageRectified(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rect.png");
 
         // -- Patchmatch. For execution, the images need to be of type optional<Pixel> *
         //PatchMatch patchMatch(testImage.getLeftImageRectified(),testImage.getRightImageRectified(),width,height,PATCH_SIZE);

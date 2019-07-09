@@ -27,9 +27,10 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
 
     int i;
     BYTE current;
+
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            i = (h * width + w) * 4; // Considered RGBA format of input
+            i = ((height - h) * width + w) * 4; // Considered RGBA format of input, weird indexing in order to not have a mirrored image.
             current = image[i];
             color.rgbRed = image[i];
             color.rgbGreen = image[i+1];
@@ -39,7 +40,7 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
     }
 
     if (FreeImage_Save(FIF_PNG, bitmap, filename.c_str(), 0))
-        std::cout << "Image successfully saved!" << std::endl;
+        std::cout << "RGB image successfully saved!" << std::endl;
 
     FreeImage_DeInitialise();
 
@@ -97,7 +98,7 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     }
 
     if (FreeImage_Save(FIF_PNG, bitmap, filename.c_str(), 0))
-        std::cout << "Image successfully saved!" << std::endl;
+        std::cout << "Depth image successfully saved!" << std::endl;
 
     FreeImage_DeInitialise();
 

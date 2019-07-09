@@ -115,7 +115,7 @@ public:
                 // Helper to group every 2 consecutive images to pairs
                 // --> in case of better database should be able to make this better
                 if(pair) {
-                    m_imagePairNameVector.push_back(std::pair<std::string, std::string>(temp_imageName, imageName));
+                    m_imagePairNameVector.push_back(std::pair<std::string, std::string>(imageName, temp_imageName));
                     pair = !pair;
                     samples++;
                 }
