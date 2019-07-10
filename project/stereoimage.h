@@ -37,6 +37,8 @@ class StereoImage {
         int getRightImageHeight() const;
         std::optional<Pixel> *getLeftImageRectified() const;
         std::optional<Pixel> *getRightImageRectified() const;
+        Pixel *getLeftImageRectifiedUnoptional() const;
+        Pixel *getRightImageRectifiedUnoptional() const;
         int *getLeftImageLookup() const;
         int *getRightImageLookup() const;
         float *getDepthImage();

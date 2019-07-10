@@ -57,9 +57,10 @@ public:
         m_rightIntrinsics << 2945.377f, 0.0f, 1455.543f,
                 0.0f, 2945.377f, 954.52f,
                 0.0f, 0.0f, 1.0f;
-        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, 178.232f, // translated along x axis by 178.232mm
-                0.0f, 1.0f, 0.0f, 0.0f,
-                0.0f, 0.0f, 1.0f, 0.0f,
+        // TDOD: MANIPULATED FOR TESTING; CHANGE BACK!
+        m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 178.232f, // translated along x axis by 178.232mm
+                0.0f, 1.f, 0.0f, 0.0f,
+                -0.7071f, 0.0f, 0.7071f, 0.0f,
                 0.0f, 0.0f, 0.0f, 1.0f;
 
         // set index to start with

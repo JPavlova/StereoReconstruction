@@ -139,8 +139,8 @@ Matrix3f skewSymmetricMatrix(Vector3f& vector) {
 
 void StereoImage::rectify()
 {
-    int width = sensor->getLeftImageHeight();
-    int height = sensor->getLeftImageWidth();
+    int width = sensor->getLeftImageWidth();
+    int height = sensor->getLeftImageHeight();
 
     Pixel* leftImage = getLeftImage();
     Pixel* rightImage = getRightImage();
@@ -165,44 +165,50 @@ void StereoImage::rectify()
     Matrix3f tmpm = skewSymmetricMatrix(tmpv);
 
     // remark: other source F = K^(-T) * ssM(T) * R * K'^(-1)
-    F = K2.inverse().transpose()*R*K1.transpose()*tmpm;
+//    F = K2.inverse().transpose()*R*K1.transpose()*tmpm;
+    F = K1.inverse().transpose() * skewSymmetricMatrix(t) * R * K2.inverse();
 
     /*Berechne Epipolare Linien*/
-    Vector3f e1,e2; // not sure if e2 is even needed
-    e1 = (-1.f)*K1.transpose()*t;
-    e2 = K2*t;
+    Vector3f e1 = K1 * R.transpose() * t;
+    Vector3f e2 = K2 * t;
+
+    Vector3f a = F * e1;
 
     /*Berechne z*/
     /*Berechne A,B bzw A',B'*/
     Matrix3f A1,B1,A2,B2;
-    Matrix3f pp, ppc;
+    Matrix3f PP, ppc;
 
-    pp << ((width*height)/12)* width*width - 1 , 0.f, 0.f,
-            0.f, ((width*height)/12)*height*height-1, 0.f,
-            0.f, 0.f, 0.f;
+    auto fsquare = [](int a){return (float)a*(float)a;};
 
-    ppc << 1/4* powf(width-1,2), 1/4*(width-1)*(height-1), 0.f,
-            1/4*(width-1)*(height-1), 1/4*(powf(height-1,2)), 0.f,
-            0.f, 0.f, 0.f;
+    PP << (width*height)/12.f * fsquare(width) - 1.f , 0.f, 0.f,
+          0.f, (width*height)/12.f * fsquare(height) - 1.f, 0.f,
+          0.f, 0.f, 0.f;
+
+    ppc << 0.25f*fsquare(width-1), 0.25f*(width-1)*(height-1), 0.f,
+           0.25f*(width-1)*(height-1), 0.25f*fsquare(height-1), 0.f,
+           0.f, 0.f, 0.f;
 
     Matrix3f esx1 = skewSymmetricMatrix(e1);
-    Matrix3f esx2 = skewSymmetricMatrix(e2); // is this even needed? -> probably not (delete on next edit)
 
-    A1 = esx1.transpose()*pp*esx1;
+    A1 = esx1.transpose()*PP*esx1;
     B1 = esx1.transpose()*ppc*esx1;
 
-    A2 = F.transpose()*pp*F;
+    A2 = F.transpose()*PP*F;
     B2 = F.transpose()*ppc*F;
 
-    /*A = D*D.traspose()*/
+    /*A = D*D.transpose()*/
 
     Matrix3f D = decomposeMatrix(A1);
+    Matrix3f aaaaaaaa = D.transpose() * D;
 
     /*y=Eigenvector of D.inv.trans*B*D.inv*/
     EigenSolver<Matrix3f> y(D.inverse().transpose()*B1*D.inverse());
 
     /*z = D.inv*y*/
-    Vector3f z = D.inverse() * y.pseudoEigenvectors().col(0); // TODO: decide if complex EV needed
+    Matrix3f vals = y.pseudoEigenvalueMatrix();
+    Matrix3f eigs = y.pseudoEigenvectors();
+    Vector3f z = D.inverse() * y.pseudoEigenvectors().col(0);
 
     Vector3f w1, w2;
     w1 = esx1*z;
@@ -211,7 +217,7 @@ void StereoImage::rectify()
     float vc = 0; // minimum v-coordinate of a pixel in any image, set to zero so far
 
     Matrix3f Hr1, Hr2, Hp1, Hp2;
-    Hr1 << F(2,1)-w1.y()*F(2,2), w1.x()*F(2,2)-F(2,1), 0.f,
+    Hr1 << F(2,1)-w1.y()*F(2,2), w1.x()*F(2,2)-F(2,0), 0.f,
             F(2,0)-w1.x()*F(2,2), F(2,1)-w1.y()*F(2,2), F(2,2)+vc,
             0.f, 0.f, 1.f;
     Hr2 << F(1,2)-w2.y()*F(2,2), w2.x()*F(2,2)-F(0,2), 0.f,
@@ -227,6 +233,12 @@ void StereoImage::rectify()
 
     Matrix3f inverseTransform1 = (Hr1 * Hp1).inverse();
     Matrix3f inverseTransform2 = (Hr2 * Hp2).inverse();
+
+//    Matrix3f h2, h1;
+//    h2 << 1, 0, 0, 0, 1, 0, -1, 0, 1;
+//    h1 = R * t;
+//    Matrix3f test = h2*h1;
+
 
     // Pixel* v1;
     // Pixel* v2;
@@ -303,9 +315,9 @@ void StereoImage::disparityToDepth()
     float f =  2945.377f;           //needs to be edit after own camera calib
     float b = 178.232f;             //values from calib.txt
     float doffs = 170.681f;
-//    float d;
+    //    float d;
 
-//    float* z;
+    //    float* z;
 
     // Method Draft
     // get pixels from non-rectified images
@@ -328,6 +340,19 @@ void StereoImage::disparityToDepth()
 
 
 
+}
+
+// Needed to write out rectified images
+static Pixel* unOptionalize(std::optional<Pixel>* image, int size) {
+    Pixel* n_image = new Pixel[size];
+    for(int i = 0; i < size; i++) {
+        if(!image[i].has_value()) {
+            n_image[i] = Pixel(0, 0, 0, 0);
+            continue;
+        }
+        n_image[i] = image[i].value();
+    }
+    return n_image;
 }
 
 
@@ -371,6 +396,16 @@ std::optional<Pixel> *StereoImage::getLeftImageRectified() const
 std::optional<Pixel> *StereoImage::getRightImageRectified() const
 {
     return m_rightImageRectified;
+}
+
+Pixel *StereoImage::getLeftImageRectifiedUnoptional() const
+{
+    return unOptionalize(m_leftImageRectified, m_leftImageWidth * m_leftImageHeight);
+}
+
+Pixel *StereoImage::getRightImageRectifiedUnoptional() const
+{
+    return unOptionalize(m_rightImageRectified, m_rightImageWidth * m_rightImageHeight);
 }
 
 int *StereoImage::getLeftImageLookup() const
