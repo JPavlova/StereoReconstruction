@@ -43,7 +43,7 @@
  * **/
 
 int main(int argc, char *argv[])
-{
+{/*
     // Read in data
     std::string dataDir = "../";
     CameraSensor sensor;
@@ -85,6 +85,39 @@ int main(int argc, char *argv[])
     }
 
 
+
+    return 0;*/
+
+
+    int width = 640;
+    int height = 430;
+    int patchSize = 9;
+    std::optional<Pixel> leftImage[width * height];
+    std::optional<Pixel> rightImage[width * height];
+
+    for (int i = 0; i < width * height; i++)
+    {
+        leftImage[i] = std::optional(Pixel(0, 0, 0, 0));
+        rightImage[i] = std::optional(Pixel(0, 0, 0, 0));
+    }
+
+    for (int i = 0; i < height; i++)
+    {
+        leftImage[i * width + 4] = std::optional(Pixel(1, 1, 1, 1));
+        rightImage[i * width + 5] = std::optional(Pixel(1, 1, 1, 1));
+    }
+
+    PatchMatch patchMatch(leftImage, rightImage, width, height, patchSize);
+    int *disparity = patchMatch.computeDisparity();
+
+    /*for (int i = 0; i < height; i++)
+    {
+        for (int j = 0; j < width; j++)
+        {
+            std::cout << disparity[i * width + j] << ",";
+        }
+        std::cout << std::endl;
+    }*/
 
     return 0;
 }

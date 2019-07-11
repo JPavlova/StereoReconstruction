@@ -1,14 +1,16 @@
 #include "patchmatch.h"
+#include "prerequisites.h"
+
 #include <cmath>
 #include <Eigen/Eigen>
 #include <cstdlib>
-#include "prerequisites.h"
 #include <optional>
+//#include <omp.h>
 
 #define DISPARITY_INVALID -1
 #define NEIGHBORHOOD_INVALID INT_MAX
 
-#define NUM_ITERATIONS 1
+#define NUM_ITERATIONS 5
 #define ALPHA 0.5
 
 PatchMatch::PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *rightImage, int width, int height, int patchSize) : m_leftImage(leftImage),
@@ -20,14 +22,20 @@ PatchMatch::PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *ri
     m_disparity = new int[m_width * m_height];
     m_neighborhood = new int[m_width * m_height];
 
-    for(int i = 0; i < m_width * m_height; i++){
+    for(int i = 0; i < m_height * m_width; i++){
+        m_disparity[i] = DISPARITY_INVALID;
+        m_neighborhood[i] = NEIGHBORHOOD_INVALID;
+    }
 
-        if(!m_leftImage[i].has_value()){
-            m_disparity[i] = DISPARITY_INVALID;
-            m_neighborhood[i] = NEIGHBORHOOD_INVALID;
-        } else {
-            m_disparity[i] = i;
-            m_neighborhood[i] = evalNeighborhood(i, i);
+    for(int y = patchSize / 2; y < m_height - patchSize / 2; y++){
+        for(int x = patchSize / 2; x < m_width - patchSize /2; x++){
+
+            int idx = y * m_width + x;
+
+            if(m_leftImage[idx].has_value()){
+                m_disparity[idx] = idx;
+                m_neighborhood[idx] = evalNeighborhood(idx, idx);
+            }
         }
     }
 }
@@ -35,6 +43,8 @@ PatchMatch::PatchMatch(std::optional<Pixel> *leftImage, std::optional<Pixel> *ri
 int *PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
+        std::cout << "Start" << std::endl;
+//#pragma omp parallel for
         for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
             for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
 
