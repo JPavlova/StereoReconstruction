@@ -31,6 +31,7 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             i = ((height - h) * width + w) * 4; // Considered RGBA format of input, weird indexing in order to not have a mirrored image.
+            //std::cout << "width: " << w << ", height: " << h << std::endl;
             current = image[i];
             color.rgbRed = image[i];
             color.rgbGreen = image[i+1];

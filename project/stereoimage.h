@@ -22,6 +22,7 @@ class StereoImage {
             SAFE_DELETE_ARRAY(m_depthImage);
         }
         void rectify();
+        void rectify2();
         void patchmatch();
         void disparityToDepth();
 

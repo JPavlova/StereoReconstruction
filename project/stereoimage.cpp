@@ -8,13 +8,10 @@
 //#include <opencv4/opencv2/cvconfig.h>
 //#include <opencv4/opencv2/imgproc.hpp>
 
-
-
-
 /**
  * @brief StereoImage::StereoImage
  * create StereoImage from left/right BYTE * arrays and camera sensor, save in Pixel* array for left/right images
- * @param leftImage : BYTE * array
+ * @param leftImage : BYTE * array+
  * @param rightImage : BYTE * array
  * @param sensor : CameraSensor * object
  */
@@ -99,6 +96,54 @@ bool StereoImage::backproject_frame(Vertex *vertices)
     return true;
 }
 
+void StereoImage::rectify() {
+    Matrix3f H = sensor->getH();
+    Matrix3f H_ = sensor->getH_();
+    Matrix3f S = sensor->getS();
+
+    int i = 0;
+    Vector3f position, transformed_l, transformed_r;
+    int x_left, y_left, x_right, y_right;
+
+    for (int row = 0; row < m_leftImageHeight; row++) {
+        for (int col = 0; col < m_leftImageWidth; col++) {
+            i = row * m_leftImageWidth + col;
+            position << col, row, 1;
+
+            transformed_l = (S * H).inverse() * position;
+            transformed_l /= transformed_l(2);
+            transformed_r = (S * H_).inverse() * position;
+            transformed_r /= transformed_r(2);
+
+            x_left = std::round(transformed_l(0));
+            y_left = std::round(transformed_l(1));
+            x_right= std::round(transformed_r(0));
+            y_right= std::round(transformed_r(1));
+
+            // pick corresponding color from untransformed image, nearest neighbour right now and not interpolated
+            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
+                int idx_l = y_left * m_leftImageWidth + x_left;
+                m_leftImageRectified[i] = m_leftImage[idx_l];
+            }
+
+            if ((x_right >= 0) && (y_right >= 0) && (x_right < m_rightImageWidth) && (y_right < m_rightImageHeight)) {
+                int idx_l = y_right * m_rightImageWidth + x_right;
+                m_rightImageRectified[i] = m_rightImage[idx_l];
+            }
+
+        }
+    }
+}
+
+/*
+Matrix3f skewSymmetricMatrix(Vector3f& vector) {
+    Matrix3f m;
+    m << 0.f, -vector.z(), vector.y(),
+            vector.z(), 0.f, -vector(0),
+            -vector.y(), vector(0), 0.f;
+    return m;
+}
+
 Matrix3f decomposeMatrix(Matrix3f D)
 {
     float sum; //Hilfsvariablen
@@ -129,14 +174,6 @@ Matrix3f decomposeMatrix(Matrix3f D)
     return D;
 }
 
-Matrix3f skewSymmetricMatrix(Vector3f& vector) {
-    Matrix3f m;
-    m << 0.f, -vector.z(), vector.y(),
-            vector.z(), 0.f, -vector.x(),
-            -vector.y(), vector.x(), 0.f;
-    return m;
-}
-
 void StereoImage::rectify()
 {
     int width = sensor->getLeftImageWidth();
@@ -145,7 +182,7 @@ void StereoImage::rectify()
     Pixel* leftImage = getLeftImage();
     Pixel* rightImage = getRightImage();
 
-    /*Berechne Foundation Matrix F*/
+    // Berechne Foundation Matrix F
 
     Matrix3f K1 = sensor->getLeftIntrinsics(); //linke Kamera
     Matrix3f K2 = sensor->getRightIntrinsics(); //rechte Kamera
@@ -168,14 +205,14 @@ void StereoImage::rectify()
 //    F = K2.inverse().transpose()*R*K1.transpose()*tmpm;
     F = K1.inverse().transpose() * skewSymmetricMatrix(t) * R * K2.inverse();
 
-    /*Berechne Epipolare Linien*/
+    // Berechne Epipolare Linien
     Vector3f e1 = K1 * R.transpose() * t;
     Vector3f e2 = K2 * t;
 
     Vector3f a = F * e1;
 
-    /*Berechne z*/
-    /*Berechne A,B bzw A',B'*/
+    // Berechne z
+    // Berechne A,B bzw A',B'
     Matrix3f A1,B1,A2,B2;
     Matrix3f PP, ppc;
 
@@ -197,15 +234,15 @@ void StereoImage::rectify()
     A2 = F.transpose()*PP*F;
     B2 = F.transpose()*ppc*F;
 
-    /*A = D*D.transpose()*/
+    / A = D*D.transpose()
 
     Matrix3f D = decomposeMatrix(A1);
     Matrix3f aaaaaaaa = D.transpose() * D;
 
-    /*y=Eigenvector of D.inv.trans*B*D.inv*/
+    // y=Eigenvector of D.inv.trans*B*D.inv
     EigenSolver<Matrix3f> y(D.inverse().transpose()*B1*D.inverse());
 
-    /*z = D.inv*y*/
+    // z = D.inv*y
     Matrix3f vals = y.pseudoEigenvalueMatrix();
     Matrix3f eigs = y.pseudoEigenvectors();
     Vector3f z = D.inverse() * y.pseudoEigenvectors().col(0);
@@ -233,6 +270,12 @@ void StereoImage::rectify()
 
     Matrix3f inverseTransform1 = (Hr1 * Hp1).inverse();
     Matrix3f inverseTransform2 = (Hr2 * Hp2).inverse();
+
+    std::cout << "z: \n" << z << std::endl;
+    std::cout << "w1: \n" << w1 << std::endl;
+    std::cout << "F: \n" << F << std::endl;
+    std::cout << "Hp1: \n" << Hp1 << std::endl;
+    std::cout << "Hr1: \n" << Hr1 << std::endl;
 
 //    Matrix3f h2, h1;
 //    h2 << 1, 0, 0, 0, 1, 0, -1, 0, 1;
@@ -303,6 +346,7 @@ void StereoImage::rectify()
     //  setRightImageRectified(v2);
 
 }
+*/
 
 void StereoImage::disparityToDepth()
 {

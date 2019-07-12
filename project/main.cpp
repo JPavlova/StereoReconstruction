@@ -45,7 +45,8 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
+    //std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
+    std::string dataDir = "../project/data/blender";
     CameraSensor sensor;
 
     if(!sensor.Init(dataDir)) {
@@ -63,9 +64,8 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-        writeRGBImage((BYTE *) testImage.getLeftImage(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rgb.png");
-        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), testImage.getLeftImageWidth(), testImage.getLeftImageHeight(), "./rect_l.png");
-        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), testImage.getRightImageWidth(), testImage.getRightImageHeight(), "./rect_r.png");
+        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
 //        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
@@ -79,8 +79,6 @@ int main(int argc, char *argv[])
 //        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
         //writeMesh(vertices, width, height, "./pointcloud.off");
     }
-
-
 
     return 0;
 }

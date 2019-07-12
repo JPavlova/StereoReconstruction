@@ -45,6 +45,11 @@ static void progressBar(float progress, std::string title) {
     }
 }
 
+// for debugging
+static void my_print_vector(Eigen::Vector3f v) {
+    std::cout << v(0) << ", " << v.y() << ", " << v.z() << std::endl;
+}
+
 #ifndef SAFE_DELETE_ARRAY
 #define SAFE_DELETE_ARRAY(ptr) {if(ptr!=nullptr) {delete[] ptr; ptr = nullptr;}}
 #endif
