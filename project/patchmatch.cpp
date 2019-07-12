@@ -38,7 +38,7 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
             m_neighborhood[i] = NEIGHBORHOOD_INVALID;
         } else {
             m_matches[i] = i;
-            m_neighborhood[i] = evalNeighborhood(i, i);
+            m_neighborhood[i] = evalNeighborhood(i, i); // maybe we could initialize with a gaussian instead, but this seems to work well.
         }
     }
 }
@@ -46,17 +46,14 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
 void PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
-        for (int y = m_patchSize/2; y < (m_height - m_patchSize / 2); y++){ // divided by 10 to save time... CHANGE BACK
+        for (int y = m_patchSize/2; y < (m_height - m_patchSize / 2); y++){
             for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
                 int idx = y * m_width + x;
 
-                if(m_matches[idx] == MATCH_INVALID){ // das hier macht gar nichts
+                if(m_matches[idx] == MATCH_INVALID){
                     continue;
                 }
-
-                if (x > 0){
-                    propagate(idx);
-                }
+                propagate(idx);
                 randomSearch(y, idx);
 
                 if ((idx % 1000) == 0)
@@ -75,14 +72,13 @@ void PatchMatch::computeDisparity()
         }
 
         // TODO: In case disparity is not just difference of x values, rewrite
-
         int idxLeft = idx;
         int idxRight = m_matches[idx];
 
         int colLeft = idxLeft % m_width;
         int colRight = idxRight % m_width;
 
-        m_disparity[idx] = (float) colRight - (float) colLeft;
+        m_disparity[idx] = colRight - colLeft;
 
     }
 }
@@ -90,6 +86,7 @@ void PatchMatch::computeDisparity()
 void PatchMatch::propagate(int idx)
 {
     if (m_neighborhood[idx - 1] < m_neighborhood[idx]){
+
         m_neighborhood[idx] = evalNeighborhood(idx, m_matches[idx - 1]);
         m_matches[idx] = m_matches[idx - 1];
     }
@@ -100,25 +97,37 @@ void PatchMatch::randomSearch(int row, int idx)
     double search_radius = ALPHA * m_width;
 
     while (search_radius > 1){
-
+        // pick a random pixel in current row
         double r = 2.0 * rand() / RAND_MAX - 1;
         int tested_disparity = m_matches[idx] + ceil(search_radius * r);
-        search_radius *= ALPHA;
         int tested_disparity_col = tested_disparity - row * m_width;
 
+        // test if random pixel is in image
         if (tested_disparity_col < 0 || tested_disparity_col >= m_width){
             continue;
         }
 
+        // compute pixel distance and update if patch matches better
         int neighborhood = evalNeighborhood(idx, tested_disparity);
-
         if (m_neighborhood[idx] > neighborhood){
             m_neighborhood[idx] = neighborhood;
             m_matches[idx] = tested_disparity;
         }
+
+        search_radius *= ALPHA;
     }
 }
 
+/**
+ * @brief PatchMatch::evalNeighborhood
+ * This method calculates the summed pixel distances between two patches. Patches are identified by their centers.
+ * This method returns NEIGHBORHOOD_INVALID if any pixel of the patch has no value.
+ * TODO: maybe change that?-> Still calculate the pixel distance for invalid patches
+ *
+ * @param center_left
+ * @param center_right
+ * @return
+ */
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
 {
     int totalDistance = 0;
@@ -135,6 +144,7 @@ int PatchMatch::evalNeighborhood(int center_left, int center_right)
 
             Vector4i pixelDistance = m_leftImage[idx_left].value().cast<int>() - m_rightImage[idx_right].value().cast<int>();
             totalDistance += pixelDistance.dot(pixelDistance);
+            //totalDistance += pixelDistance.norm();
         }
     }
 
