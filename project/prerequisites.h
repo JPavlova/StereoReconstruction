@@ -9,6 +9,9 @@
 #ifndef MINF
 #define MINF -std::numeric_limits<float>::infinity()
 #endif
+#ifndef INF
+#define INF std::numeric_limits<float>::infinity()
+#endif
 
 typedef Eigen::Matrix<unsigned char, 4, 1> Pixel; // Works as Vector4uc
 const static Pixel invalidPixel = Pixel(-1, -1, -1, -1);

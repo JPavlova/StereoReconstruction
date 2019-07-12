@@ -64,20 +64,23 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+        //writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        //writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
-        patchMatch.computeDisparity(); // directly sets disparity for stereoImage
+        patchMatch.computeDisparity();
+        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png");
+        testImage.disparityToDepth();
+        testImage.derectifyDepthMap();
+        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
 
-//        // point cloud/ backprojection
-//        Vertex *vertices = new Vertex[width * height];
-//        testImage.backproject_frame(vertices);
-
-//        // export point cloud to .off
-//        writeDepthImage(testImage.getDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png");
-        //writeMesh(vertices, width, height, "./pointcloud.off");
+        // point cloud/ backprojection
+        /*
+        Vertex *vertices = new Vertex[width * height];
+        testImage.backproject_frame(vertices);
+        writeMesh(vertices, width, height, "./pointcloud.off");
+        */
     }
 
     return 0;

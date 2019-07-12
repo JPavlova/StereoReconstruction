@@ -73,13 +73,24 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     float current;
     for (int i = 0; i < width * height; i++) {
         current = depthImage[i];
-        if (current > maximum) {
-            maximum = current;
-        }
-        if (current < minimum) {
-            minimum = current;
+        if ((current != MINF) && (current != INF)){
+            if (current > maximum) {
+                maximum = current;
+            }
+            if (current < minimum) {
+                minimum = current;
+            }
         }
     }
+    std::cout << "maximum: " << maximum << std::endl;
+    std::cout << "minimum: " << minimum << std::endl;
+    if (minimum < 0)
+        minimum = 0;
+    if (maximum > 1000) {
+        maximum = 1000;
+    }
+    std::cout << "maximum: " << maximum << std::endl;
+    std::cout << "minimum: " << minimum << std::endl;
 
     float factor = 0.0f;
     if ((maximum - minimum) > 0.000001f) {
@@ -89,7 +100,7 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     int i = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            i = h * width + w;
+            i = (height - h) * width + w; // does this work now?
             current = depthImage[i];
             color.rgbRed = (BYTE) current * factor * 255;
             color.rgbGreen = (BYTE) current * factor * 255;

@@ -26,14 +26,13 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
                                                                                                     m_rightLookup(stereoImage->getRightImageLookup()),
                                                                                                     m_width(width),
                                                                                                     m_height(height),
-                                                                                                    m_patchSize(patchSize)
+                                                                                                    m_patchSize(patchSize),
+                                                                                                    m_disparity(stereoImage->getDisparity())
 {
     m_matches = new int[m_width * m_height];
-    m_disparity = new float[m_width * m_height];
     m_neighborhood = new int[m_width * m_height];
 
     for(int i = 0; i < m_width * m_height; i++){
-
         if(!m_leftImage[i].has_value()){
             m_matches[i] = MATCH_INVALID;
             m_neighborhood[i] = NEIGHBORHOOD_INVALID;
@@ -47,22 +46,21 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
 void PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
-        for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
+        for (int y = m_patchSize/2; y < (m_height - m_patchSize / 2); y++){ // divided by 10 to save time... CHANGE BACK
             for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
-
                 int idx = y * m_width + x;
 
-                if(m_matches[idx] == MATCH_INVALID){
+                if(m_matches[idx] == MATCH_INVALID){ // das hier macht gar nichts
                     continue;
                 }
 
                 if (x > 0){
                     propagate(idx);
                 }
-
                 randomSearch(y, idx);
 
-                progressBar(((float) y * (float) m_width + (float) x) / ((float) m_height * (float) m_width), "PM Iteration " + std::to_string(i + 1));
+                if ((idx % 1000) == 0)
+                    progressBar(((float) y * (float) m_width + (float) x) / ((float) m_height * (float) m_width), "PM Iteration " + std::to_string(i + 1));
             }
         }
     }
@@ -87,8 +85,6 @@ void PatchMatch::computeDisparity()
         m_disparity[idx] = (float) colRight - (float) colLeft;
 
     }
-
-    m_stereoImage->setDisparity(m_disparity);
 }
 
 void PatchMatch::propagate(int idx)

@@ -22,7 +22,7 @@ class StereoImage {
             SAFE_DELETE_ARRAY(m_depthImage);
         }
         void rectify();
-        void rectify2();
+        void derectifyDepthMap();
         void patchmatch();
         void disparityToDepth();
 
@@ -43,8 +43,7 @@ class StereoImage {
         int *getLeftImageLookup() const;
         int *getRightImageLookup() const;
         float *getDepthImage();
-
-        void setDisparity(float *disparity);
+        float *getDisparity();
 
 private:
         CameraSensor *sensor;
@@ -71,6 +70,7 @@ private:
 
         // final output, empty at the beginning
         float* m_depthImage;
+        float* m_depthImageRectified;
 
 };
 

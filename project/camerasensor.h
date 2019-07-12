@@ -66,6 +66,10 @@ public:
          * from here on: blender data set
          * */
 
+        m_focalLength = 700.0f;
+        m_baseline = 100.0f;
+        m_doffs = 100.0f;
+
         // width/height needed for homographies
         m_leftImageWidth = 640;
         m_leftImageHeight = 480;
@@ -392,6 +396,15 @@ public:
     Matrix3f getS() {
         return m_S;
     }
+    float getFocalLength() {
+        return m_focalLength;
+    }
+    float getBaseline() {
+        return m_baseline;
+    }
+    float getDoffs() {
+        return m_doffs;
+    }
 
 private:
     // directory
@@ -408,6 +421,10 @@ private:
     BYTE* m_rightFrame;
 
     // Properties of both cameras
+    float m_focalLength;
+    float m_baseline;
+    float m_doffs;
+
     Eigen::Matrix3f m_leftIntrinsics;
     Eigen::Matrix4f m_leftExtrinsics;
 
