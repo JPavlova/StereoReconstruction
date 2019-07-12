@@ -8,7 +8,7 @@
 #include <FreeImage.h>
 #include "patchmatch.h"
 
-#define PATCH_SIZE 5
+#define PATCH_SIZE 11
 
 // MAIN FILE TO RUN PIPELINE
 

@@ -19,6 +19,10 @@ include_directories(${CERES_INCLUDE_DIRS})
 # find_package(FreeImage REQUIRED)
 # include_directories(${FREEIMAGE_INCLUDE_DIRS})
 
+#OpenMP
+find_package(OpenMP)
+include_directories(${OPENMP_INCLUDE_DIRS})
+
 # Set files to be compiled
 set(HEADER_FILES
     stereoimage.h
@@ -35,4 +39,4 @@ set(SOURCE_FILES
         )
 
 add_executable(stereo_reconstruction main.cpp ${HEADER_FILES} ${SOURCE_FILES})
-target_link_libraries(stereo_reconstruction freeimage ${CERES_LIBRARIES} ${EIGEN_LIBRARIES} libstdc++fs.a)
+target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${CERES_LIBRARIES} ${EIGEN_LIBRARIES} libstdc++fs.a)
