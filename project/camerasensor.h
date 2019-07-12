@@ -5,6 +5,7 @@
 #include "FreeImageHelper.h"
 #include <experimental/filesystem>
 #include <regex>
+#include <iostream>
 
 /**
  * @brief The CameraSensor class
@@ -218,11 +219,41 @@ public:
 
         m_H << Hr * Hp;
         m_H_ << Hr_ * Hp_;
+        m_S = determineScaleMatrix();
+    }
 
-        // TODO: find a proper way to scale
-        m_S <<  5, 0, 0,
-                0, 5, 0,
-                0, 0, 1;
+    /**
+     * @brief determineScaleMatrix - determine an approximate scale factor by comparing transformed image areas and determine their scale factor compared to the original image.
+     * @return
+     */
+    Matrix3f determineScaleMatrix() {
+        float imageArea = (m_leftImageWidth * m_leftImageHeight + m_rightImageWidth * m_rightImageHeight) / 2;
+
+        // left image approx area
+        Vector3f lowerLeftCorner = m_H * Vector3f(0, 0, 0);
+        Vector3f lowerRightCorner = m_H * Vector3f(0, m_leftImageWidth, 0);
+        Vector3f upperLeftCorner = m_H * Vector3f(m_leftImageHeight, 0, 0);
+
+        Vector3f firstEdge = lowerRightCorner - lowerLeftCorner;
+        Vector3f secondEdge = upperLeftCorner - lowerLeftCorner;
+        float approxArea = firstEdge(1) * secondEdge(0);
+
+        // right image approx area
+        Vector3f lowerLeftCorner_ = m_H_ * Vector3f(0, 0, 0);
+        Vector3f lowerRightCorner_ = m_H_ * Vector3f(0, m_rightImageWidth, 0);
+        Vector3f upperLeftCorner_ = m_H_ * Vector3f(m_rightImageHeight, 0, 0);
+
+        Vector3f firstEdge_ = lowerRightCorner_ - lowerLeftCorner_;
+        Vector3f secondEdge_ = upperLeftCorner_ - lowerLeftCorner_;
+        float approxArea_ = firstEdge_(1) * secondEdge_(0);
+
+        // determine the average area
+        float approxAreaAvg = (approxArea + approxArea_) / 2;
+        float scale = std::sqrt(imageArea / approxAreaAvg);
+
+        Matrix3f result;
+        result << scale, 0, 0, 0, scale, 0, 0, 0, 1;
+        return result;
     }
 
     bool setArrays(int l_w, int l_h, int r_w, int r_h) {

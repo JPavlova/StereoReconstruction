@@ -68,8 +68,8 @@ int main(int argc, char *argv[])
         writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
-//        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
-//        patchMatch.computeDisparity(); // directly sets disparity for stereoImage
+        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
+        patchMatch.computeDisparity(); // directly sets disparity for stereoImage
 
 //        // point cloud/ backprojection
 //        Vertex *vertices = new Vertex[width * height];
