@@ -26,8 +26,6 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
     m_stereoImage(stereoImage),
     m_leftImage(stereoImage->getLeftImageRectified()),
     m_rightImage(stereoImage->getRightImageRectified()),
-    m_leftLookup(stereoImage->getLeftImageLookup()),
-    m_rightLookup(stereoImage->getRightImageLookup()),
     m_width(width),
     m_height(height),
     m_patchSize(patchSize),

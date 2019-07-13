@@ -40,8 +40,7 @@ class StereoImage {
         std::optional<Pixel> *getRightImageRectified() const;
         Pixel *getLeftImageRectifiedUnoptional() const;
         Pixel *getRightImageRectifiedUnoptional() const;
-        int *getLeftImageLookup() const;
-        int *getRightImageLookup() const;
+        int *getLookup() const;
         float *getDepthImage();
         float *getDisparity();
 
@@ -62,8 +61,7 @@ private:
         std::optional<Pixel>* m_rightImageRectified;
 
         // index lookup tables
-        int* m_leftImageLookup;
-        int* m_rightImageLookup;
+        int* m_lookUpTransformedIndices;
 
         // disparities as floats
         float* m_disparity;

@@ -64,8 +64,8 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-        //writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-        //writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+        // writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        // writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);

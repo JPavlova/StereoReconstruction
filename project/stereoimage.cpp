@@ -8,6 +8,8 @@
 //#include <opencv4/opencv2/cvconfig.h>
 //#include <opencv4/opencv2/imgproc.hpp>
 
+#define BILINEAR_INTERPOLATION false
+
 /**
  * @brief StereoImage::StereoImage
  * create StereoImage from left/right BYTE * arrays and camera sensor, save in Pixel* array for left/right images
@@ -45,11 +47,9 @@ StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageRectified[idx] = std::nullopt;
 
     // set up lookup arrays
-    m_leftImageLookup = new int[m_leftImageWidth * m_leftImageHeight];
-    m_rightImageLookup = new int[m_rightImageWidth * m_rightImageHeight];
+    m_lookUpTransformedIndices = new int[m_leftImageWidth * m_leftImageHeight];
 
-    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImageLookup[idx] = -1;
-    for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImageLookup[idx] = -1;
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_lookUpTransformedIndices[idx] = -1;
 }
 
 /**
@@ -99,28 +99,33 @@ bool StereoImage::backproject_frame(Vertex *vertices)
 }
 
 void StereoImage::derectifyDepthMap() {
-    Matrix3f H = sensor->getH();
-    Matrix3f S = sensor->getS();
+    // OLD CODE WITH ADDITIONAL TRANSFORMATION NEEDED COMMENTED
 
-    int i = 0;
-    Vector3f position, transformed_l;
-    int x_left, y_left;
+//    Matrix3f H = sensor->getH();
+//    Matrix3f S = sensor->getS();
+
+//    int i = 0;
+//    Vector3f position, transformed_l;
+//    int x_left, y_left;
 
     for (int row = 0; row < m_leftImageHeight; row++) {
         for (int col = 0; col < m_leftImageWidth; col++) {
             i = row * m_leftImageWidth + col;
-            position << col, row, 1;
 
-            transformed_l = (S * H).inverse() * position;
-            transformed_l /= transformed_l(2);
+            m_depthImage[i] = m_lookUpTransformedIndices[i] >= 0 ? m_depthImageRectified[m_lookUpTransformedIndices[i]] : MINF;
 
-            x_left = std::round(transformed_l(0));
-            y_left = std::round(transformed_l(1));
+//            position << col, row, 1;
 
-            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
-                int idx_l = y_left * m_leftImageWidth + x_left;
-                m_depthImage[idx_l] = m_depthImageRectified[i];
-            }
+//            transformed_l = (S * H).inverse() * position;
+//            transformed_l /= transformed_l(2);
+
+//            x_left = std::round(transformed_l(0));
+//            y_left = std::round(transformed_l(1));
+
+//            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
+//                int idx_l = y_left * m_leftImageWidth + x_left;
+//                m_depthImage[idx_l] = m_depthImageRectified[i];
+//            }
         }
     }
 }
@@ -149,17 +154,54 @@ void StereoImage::rectify() {
             x_right= std::round(transformed_r(0));
             y_right= std::round(transformed_r(1));
 
-            // pick corresponding color from untransformed image, nearest neighbour right now and not interpolated
-            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
-                int idx_l = y_left * m_leftImageWidth + x_left;
-                m_leftImageRectified[i] = m_leftImage[idx_l];
-            }
+            if(!BILINEAR_INTERPOLATION) {
+                // pick corresponding color from untransformed image, nearest neighbour right now and not interpolated
+                if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
+                    int idx_l = y_left * m_leftImageWidth + x_left;
+                    m_leftImageRectified[i] = m_leftImage[idx_l];
+                    m_lookUpTransformedIndices[y_left * m_leftImageWidth + x_left] = i;
+                }
 
-            if ((x_right >= 0) && (y_right >= 0) && (x_right < m_rightImageWidth) && (y_right < m_rightImageHeight)) {
-                int idx_l = y_right * m_rightImageWidth + x_right;
-                m_rightImageRectified[i] = m_rightImage[idx_l];
+                if ((x_right >= 0) && (y_right >= 0) && (x_right < m_rightImageWidth) && (y_right < m_rightImageHeight)) {
+                    int idx_l = y_right * m_rightImageWidth + x_right;
+                    m_rightImageRectified[i] = m_rightImage[idx_l];
+                }
             }
+            else {
+                // bilinear interpolation, check time differences?
+                auto bilinearInterpolation = [&](Vector3f& transform, Pixel* image, std::optional<Pixel>* rectifiedImage, int width, int height) {
+                    if(0 <= transform[0] && transform[0] <= (float)width && 0 <= transform[1] && transform[1] <= (float)height) {
+                        int newRow = (int) transform[1];
+                        int newCol = (int) transform[0];
+                        m_lookUpTransformedIndices[newRow * m_leftImageWidth + newCol] = i;
 
+                        // Bilinear interpolation for values (TODO check if just that simple in RGB)
+                        float r = 0.f, g = 0.f, b = 0.f, a = 0.f;
+                        float a_ = transform[1] - (float)(int)transform[1]; // dist to up
+                        float b_ = transform[0] - (float)(int)transform[0]; // dist to left
+
+                        for (int row_ = -1; row_ <= 1; ++row_) {
+                            for (int col_ = -1; col_ <= 1; ++col_) {
+
+                                if( fabs((float)row_ + 0.5f - a_) < 1.f && fabs((float)col_ + 0.5f - b_) < 1.f && // check if closer pixel
+                                        0 < newCol + col_ && newCol + col_ < width && 0 < newRow + row_ && newRow + row_ < height){
+
+                                    float f = fabs((float)row_ + 0.5f - a_) * fabs((float)col_ + 0.5f - b_);
+
+                                    r += f * image[(newRow + row_) * width + newCol + col_][0];
+                                    g += f * image[(newRow + row_) * width + newCol + col_][1];
+                                    b += f * image[(newRow + row_) * width + newCol + col_][2];
+                                    a += f * image[(newRow + row_) * width + newCol + col_][3];
+                                }
+                            }
+                        }
+                        rectifiedImage[i] = Pixel((int)r, (int)g, (int)b, (int)a);
+                    }
+                };
+
+                bilinearInterpolation(transformed_l, m_leftImage, m_leftImageRectified, m_leftImageWidth, m_leftImageHeight);
+                bilinearInterpolation(transformed_r, m_rightImage, m_rightImageRectified, m_rightImageWidth, m_rightImageHeight);
+            }
         }
     }
 }
@@ -257,14 +299,9 @@ Pixel *StereoImage::getRightImageRectifiedUnoptional() const
     return unOptionalize(m_rightImageRectified, m_rightImageWidth * m_rightImageHeight);
 }
 
-int *StereoImage::getLeftImageLookup() const
+int *StereoImage::getLookup() const
 {
-    return m_leftImageLookup;
-}
-
-int *StereoImage::getRightImageLookup() const
-{
-    return m_rightImageLookup;
+    return m_lookUpTransformedIndices;
 }
 
 float* StereoImage::getDepthImage() {

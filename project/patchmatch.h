@@ -29,8 +29,6 @@ private:
 
     std::optional<Pixel> *m_leftImage;
     std::optional<Pixel> *m_rightImage;
-    int* m_leftLookup;
-    int* m_rightLookup;
 
     int *m_matches;
     float *m_disparity;
