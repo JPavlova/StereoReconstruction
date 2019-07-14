@@ -110,7 +110,7 @@ void StereoImage::derectifyDepthMap() {
 
     for (int row = 0; row < m_leftImageHeight; row++) {
         for (int col = 0; col < m_leftImageWidth; col++) {
-            i = row * m_leftImageWidth + col;
+            int i = row * m_leftImageWidth + col;
 
             m_depthImage[i] = m_lookUpTransformedIndices[i] >= 0 ? m_depthImageRectified[m_lookUpTransformedIndices[i]] : MINF;
 
