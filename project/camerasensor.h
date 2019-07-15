@@ -85,7 +85,7 @@ public:
                              0.0f, 0.0f, 1.0f;
 
         m_leftExtrinsics.setIdentity();
-        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 2000.0f, // 15 degree of rotation
+        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
                                 0.0f, 1.0f, 0.0f, 0.0f,
                                 -0.259f, 0.0f, 0.966f, 0.0f,
                                 0.0f, 0.0f, 0.0f, 1.0f;

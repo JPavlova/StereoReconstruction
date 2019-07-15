@@ -57,7 +57,7 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
  * @param filename
  * @return
  */
-bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename) {
+bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename, float max) {
     // using freeimage ideally
     FreeImage_Initialise();
     FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
@@ -86,8 +86,8 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     std::cout << "minimum: " << minimum << std::endl;
     if (minimum < 0)
         minimum = 0;
-    if (maximum > 1000) {
-        maximum = 1000;
+    if (maximum > max) {
+        maximum = max;
     }
     std::cout << "maximum: " << maximum << std::endl;
     std::cout << "minimum: " << minimum << std::endl;

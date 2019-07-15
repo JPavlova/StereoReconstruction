@@ -42,6 +42,7 @@ class StereoImage {
         Pixel *getRightImageRectifiedUnoptional() const;
         int *getLookup() const;
         float *getDepthImage();
+        float *getRectifiedDepthImage();
         float *getDisparity();
 
 private:

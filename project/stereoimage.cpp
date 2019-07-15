@@ -39,9 +39,9 @@ StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImage[idx] = Pixel(rightImage[4*idx], rightImage[4*idx+1], rightImage[4*idx+2], rightImage[4*idx+3]);
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = MINF;
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImageRectified[idx] = MINF;
-    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_disparity[idx] = -1;
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_disparity[idx] = MINF;
 
-    // set up arrays for left/right rectified image, fill with Pixel(-1,-1,-1,-1)
+    // set up arrays for left/right rectified image, fill with optional
     m_leftImageRectified = new std::optional<Pixel>[m_leftImageWidth * m_leftImageHeight];
     m_rightImageRectified = new std::optional<Pixel>[m_rightImageWidth * m_rightImageHeight];
 
@@ -72,13 +72,12 @@ bool StereoImage::backproject_frame(Vertex *vertices)
     float cX = leftIntrinsics(0, 2);
     float cY = leftIntrinsics(1, 2);
 
-    int i = 0;
-    float w;
-
+#pragma omp parallel for
     for (int v = 0; v < sensor->getLeftImageHeight(); v++) {
         for (int u = 0; u < sensor->getLeftImageWidth(); u++) {
-            i = v * sensor->getLeftImageWidth() + u;
-            w = depthMap[i];
+
+            int i = v * sensor->getLeftImageWidth() + u;
+            float w = depthMap[i];
 
             if (w == MINF) {
                 vertices[i].position = Vector4f(MINF, MINF, MINF, MINF);
@@ -107,11 +106,13 @@ void StereoImage::derectifyDepthMap() {
     Matrix3f S = sensor->getS();
     Matrix3f inverse = (S * H).inverse();
 
-    Vector3f position, transformed_l;
-    int x_left, y_left;
-
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < m_leftImageHeight; row++) {
         for (int col = 0; col < m_leftImageWidth; col++) {
+
+            Vector3f position, transformed_l;
+            int x_left, y_left;
+
             int i = row * m_leftImageWidth + col;
 
             position << col, row, 1;
@@ -137,13 +138,13 @@ void StereoImage::rectify() {
     Matrix3f S_H_inverse = (S * H).inverse();
     Matrix3f S_H__inverse = (S * H_).inverse();
 
-    int i = 0;
-    Vector3f position, transformed_l, transformed_r;
-    int x_left, y_left, x_right, y_right;
-
+#pragma omp parallel for collapse(2)
     for (int row = 0; row < m_leftImageHeight; row++) {
         for (int col = 0; col < m_leftImageWidth; col++) {
-            i = row * m_leftImageWidth + col;
+
+            Vector3f position, transformed_l, transformed_r;
+            int x_left, y_left, x_right, y_right;
+            int i = row * m_leftImageWidth + col;
             position << col, row, 1;
 
             transformed_l = S_H_inverse * position;
@@ -227,10 +228,11 @@ void StereoImage::disparityToDepth()
     float doffs = sensor->getDoffs();
 
     // compute depth values
+#pragma omp parallel for
     for(int i = 0; i< m_leftImageWidth * m_leftImageHeight; i++)
     {
-        if (m_disparity[i] > 0) {
-            m_depthImageRectified[i] =  baseline * focalLength / m_disparity[i];
+        if (m_disparity[i] != MINF) {
+            m_depthImageRectified[i] =  baseline * focalLength / (float)m_disparity[i];
         }
     }
 }
@@ -238,6 +240,7 @@ void StereoImage::disparityToDepth()
 // Needed to write out rectified images
 static Pixel* unOptionalize(std::optional<Pixel>* image, int size) {
     Pixel* n_image = new Pixel[size];
+#pragma omp parallel for
     for(int i = 0; i < size; i++) {
         if(!image[i].has_value()) {
             n_image[i] = Pixel(0, 0, 0, 0);
@@ -308,6 +311,10 @@ int *StereoImage::getLookup() const
 
 float* StereoImage::getDepthImage() {
     return m_depthImage;
+}
+
+float* StereoImage::getRectifiedDepthImage() {
+    return m_depthImageRectified;
 }
 
 float* StereoImage::getDisparity() {

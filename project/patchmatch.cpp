@@ -36,7 +36,7 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
     //first set all matches to invalid
 #pragma omp parallel for
     for(int i = 0; i < m_height * m_width; i++){
-        m_matches[i] = DISPARITY_INVALID;
+        m_matches[i] = MATCH_INVALID;
         m_neighborhood[i] = NEIGHBORHOOD_INVALID;
     }
 
@@ -95,7 +95,7 @@ void PatchMatch::computeDisparity()
         int colLeft = idxLeft % m_width;
         int colRight = idxRight % m_width;
 
-        m_disparity[idx] = colRight - colLeft;
+        m_disparity[idx] = abs(colRight - colLeft);
 
     }
 }
