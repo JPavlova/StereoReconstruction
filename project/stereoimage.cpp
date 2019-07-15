@@ -38,6 +38,8 @@ StereoImage::StereoImage(CameraSensor * sensor) : sensor(sensor)
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_leftImage[idx] = Pixel(leftImage[4*idx], leftImage[4*idx+1], leftImage[4*idx+2], leftImage[4*idx+3]);
     for(unsigned int idx = 0; idx < m_rightImageWidth * m_rightImageHeight; idx++) m_rightImage[idx] = Pixel(rightImage[4*idx], rightImage[4*idx+1], rightImage[4*idx+2], rightImage[4*idx+3]);
     for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImage[idx] = MINF;
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_depthImageRectified[idx] = MINF;
+    for(unsigned int idx = 0; idx < m_leftImageWidth * m_leftImageHeight; idx++) m_disparity[idx] = -1;
 
     // set up arrays for left/right rectified image, fill with Pixel(-1,-1,-1,-1)
     m_leftImageRectified = new std::optional<Pixel>[m_leftImageWidth * m_leftImageHeight];
@@ -101,31 +103,29 @@ bool StereoImage::backproject_frame(Vertex *vertices)
 void StereoImage::derectifyDepthMap() {
     // OLD CODE WITH ADDITIONAL TRANSFORMATION NEEDED COMMENTED
 
-//    Matrix3f H = sensor->getH();
-//    Matrix3f S = sensor->getS();
+    Matrix3f H = sensor->getH();
+    Matrix3f S = sensor->getS();
+    Matrix3f inverse = (S * H).inverse();
 
-//    int i = 0;
-//    Vector3f position, transformed_l;
-//    int x_left, y_left;
+    Vector3f position, transformed_l;
+    int x_left, y_left;
 
     for (int row = 0; row < m_leftImageHeight; row++) {
         for (int col = 0; col < m_leftImageWidth; col++) {
             int i = row * m_leftImageWidth + col;
 
-            m_depthImage[i] = m_lookUpTransformedIndices[i] >= 0 ? m_depthImageRectified[m_lookUpTransformedIndices[i]] : MINF;
+            position << col, row, 1;
 
-//            position << col, row, 1;
+            transformed_l = inverse * position;
+            transformed_l /= transformed_l(2);
 
-//            transformed_l = (S * H).inverse() * position;
-//            transformed_l /= transformed_l(2);
+            x_left = std::round(transformed_l(0));
+            y_left = std::round(transformed_l(1));
 
-//            x_left = std::round(transformed_l(0));
-//            y_left = std::round(transformed_l(1));
-
-//            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
-//                int idx_l = y_left * m_leftImageWidth + x_left;
-//                m_depthImage[idx_l] = m_depthImageRectified[i];
-//            }
+            if ((x_left >= 0) && (y_left >= 0) && (x_left < m_leftImageWidth) && (y_left < m_leftImageHeight)) {
+                int idx_l = y_left * m_leftImageWidth + x_left;
+                m_depthImage[idx_l] = m_depthImageRectified[i];
+            }
         }
     }
 }
@@ -134,6 +134,8 @@ void StereoImage::rectify() {
     Matrix3f H = sensor->getH();
     Matrix3f H_ = sensor->getH_();
     Matrix3f S = sensor->getS();
+    Matrix3f S_H_inverse = (S * H).inverse();
+    Matrix3f S_H__inverse = (S * H_).inverse();
 
     int i = 0;
     Vector3f position, transformed_l, transformed_r;
@@ -144,9 +146,9 @@ void StereoImage::rectify() {
             i = row * m_leftImageWidth + col;
             position << col, row, 1;
 
-            transformed_l = (S * H).inverse() * position;
+            transformed_l = S_H_inverse * position;
             transformed_l /= transformed_l(2);
-            transformed_r = (S * H_).inverse() * position;
+            transformed_r = S_H__inverse * position;
             transformed_r /= transformed_r(2);
 
             x_left = std::round(transformed_l(0));
@@ -311,216 +313,3 @@ float* StereoImage::getDepthImage() {
 float* StereoImage::getDisparity() {
     return m_disparity;
 }
-
-/*
-Matrix3f skewSymmetricMatrix(Vector3f& vector) {
-    Matrix3f m;
-    m << 0.f, -vector.z(), vector.y(),
-            vector.z(), 0.f, -vector(0),
-            -vector.y(), vector(0), 0.f;
-    return m;
-}
-
-Matrix3f decomposeMatrix(Matrix3f D)
-{
-    float sum; //Hilfsvariablen
-
-    for(int i = 0; i<3; i++)
-    {
-        for(int j = 0; j<i; j++)
-        {
-            sum = D(i,j);
-            for(int k = 0; k < j; k++)
-            {
-                sum = sum - D(i,k)*D(j,k);
-            }
-            if(i > j)
-            {
-                D(i,j) = sum/ D(j,j);
-            }
-            else if(sum > 0)
-            {
-                D(i,i) = sqrt(sum);
-            }
-        }
-    }
-
-    D(0,1) = 0.f;
-    D(0,2) = 0.f;
-    D(1,2) = 0.f;
-    return D;
-}
-
-void StereoImage::rectify()
-{
-    int width = sensor->getLeftImageWidth();
-    int height = sensor->getLeftImageHeight();
-
-    Pixel* leftImage = getLeftImage();
-    Pixel* rightImage = getRightImage();
-
-    // Berechne Foundation Matrix F
-
-    Matrix3f K1 = sensor->getLeftIntrinsics(); //linke Kamera
-    Matrix3f K2 = sensor->getRightIntrinsics(); //rechte Kamera
-    Matrix4f Rt = sensor->getRightExtrinsics();
-    Matrix3f R = Rt.block<3,3>(0,0);                                //Rotationsmatrix abgeleitet von der Extrinsic von der rechten der Kamera
-    // R << Rt(0,0), 0.f, 0.f,
-    //        0.f, Rt(1,1) ,0.f,
-    //         0.f, 0.f, Rt(2,2);
-    Vector3f t = Rt.block<3, 1>(0, 3);                                //Transformationsvector
-    //    t << Rt(0,3), Rt(1,3), Rt(2,3);
-
-    Matrix3f F;
-
-    //Berechne die asymmetrische Matrix zur Kreuzproduktdarstellung [x]_x
-
-    Vector3f tmpv = K1*R.transpose()*t;
-    Matrix3f tmpm = skewSymmetricMatrix(tmpv);
-
-    // remark: other source F = K^(-T) * ssM(T) * R * K'^(-1)
-//    F = K2.inverse().transpose()*R*K1.transpose()*tmpm;
-    F = K1.inverse().transpose() * skewSymmetricMatrix(t) * R * K2.inverse();
-
-    // Berechne Epipolare Linien
-    Vector3f e1 = K1 * R.transpose() * t;
-    Vector3f e2 = K2 * t;
-
-    Vector3f a = F * e1;
-
-    // Berechne z
-    // Berechne A,B bzw A',B'
-    Matrix3f A1,B1,A2,B2;
-    Matrix3f PP, ppc;
-
-    auto fsquare = [](int a){return (float)a*(float)a;};
-
-    PP << (width*height)/12.f * fsquare(width) - 1.f , 0.f, 0.f,
-          0.f, (width*height)/12.f * fsquare(height) - 1.f, 0.f,
-          0.f, 0.f, 0.f;
-
-    ppc << 0.25f*fsquare(width-1), 0.25f*(width-1)*(height-1), 0.f,
-           0.25f*(width-1)*(height-1), 0.25f*fsquare(height-1), 0.f,
-           0.f, 0.f, 0.f;
-
-    Matrix3f esx1 = skewSymmetricMatrix(e1);
-
-    A1 = esx1.transpose()*PP*esx1;
-    B1 = esx1.transpose()*ppc*esx1;
-
-    A2 = F.transpose()*PP*F;
-    B2 = F.transpose()*ppc*F;
-
-    / A = D*D.transpose()
-
-    Matrix3f D = decomposeMatrix(A1);
-    Matrix3f aaaaaaaa = D.transpose() * D;
-
-    // y=Eigenvector of D.inv.trans*B*D.inv
-    EigenSolver<Matrix3f> y(D.inverse().transpose()*B1*D.inverse());
-
-    // z = D.inv*y
-    Matrix3f vals = y.pseudoEigenvalueMatrix();
-    Matrix3f eigs = y.pseudoEigenvectors();
-    Vector3f z = D.inverse() * y.pseudoEigenvectors().col(0);
-
-    Vector3f w1, w2;
-    w1 = esx1*z;
-    w2 = F*z;
-
-    float vc = 0; // minimum v-coordinate of a pixel in any image, set to zero so far
-
-    Matrix3f Hr1, Hr2, Hp1, Hp2;
-    Hr1 << F(2,1)-w1.y()*F(2,2), w1.x()*F(2,2)-F(2,0), 0.f,
-            F(2,0)-w1.x()*F(2,2), F(2,1)-w1.y()*F(2,2), F(2,2)+vc,
-            0.f, 0.f, 1.f;
-    Hr2 << F(1,2)-w2.y()*F(2,2), w2.x()*F(2,2)-F(0,2), 0.f,
-            F(0,2)-w2.x()*F(2,2), F(1,2)-w2.y()*F(2,2), vc,
-            0.f, 0.f, 1.f;
-
-    Hp1 << 1.f, 0.f, 0.f,
-            0.f, 1.f, 0.f,
-            w1.x(), w1.y(), 1.f;
-    Hp2 << 1.f, 0.f, 0.f,
-            0.f, 1.f, 0.f,
-            w2.x(), w2.y(), 1.f;
-
-    Matrix3f inverseTransform1 = (Hr1 * Hp1).inverse();
-    Matrix3f inverseTransform2 = (Hr2 * Hp2).inverse();
-
-    std::cout << "z: \n" << z << std::endl;
-    std::cout << "w1: \n" << w1 << std::endl;
-    std::cout << "F: \n" << F << std::endl;
-    std::cout << "Hp1: \n" << Hp1 << std::endl;
-    std::cout << "Hr1: \n" << Hr1 << std::endl;
-
-//    Matrix3f h2, h1;
-//    h2 << 1, 0, 0, 0, 1, 0, -1, 0, 1;
-//    h1 = R * t;
-//    Matrix3f test = h2*h1;
-
-
-    // Pixel* v1;
-    // Pixel* v2;
-
-    //Output: try projection without opencv
-    for (int row = 0; row < height; ++row) {
-        for (int col = 0; col < width; ++col) {
-
-            Vector3f outputPixel = Vector3f((float)col - (float)width/2, (float)row - (float)height/2, 1.f); // shifted so (0,0) in middle
-
-            auto affineTrans = [&](Vector3f& transform, int* lookup, Pixel* image, std::optional<Pixel>* rectified){
-                if(0 <= transform[0] && transform[0] <= (float)width && 0 <= transform[1] && transform[1] <= (float)height) {
-                    int newRow = (int) transform[1];
-                    int newCol = (int) transform[0];
-                    lookup[row * width + col] = newRow * width + newCol;
-
-                    // Bilinear interpolation for values (TODO check if just that simple in RGB)
-                    float r = 0.f, g = 0.f, b = 0.f, a = 0.f;
-                    float a_ = transform[1] - (float)(int)transform[1]; // dist to up
-                    float b_ = transform[0] - (float)(int)transform[0]; // dist to left
-
-                    for (int row_ = -1; row_ <= 1; ++row_) {
-                        for (int col_ = -1; col_ <= 1; ++col_) {
-
-                            if( fabs((float)row_ + 0.5f - a_) < 1.f && fabs((float)col_ + 0.5f - b_) < 1.f && // check if closer pixel
-                                    0 < newCol + col_ && newCol + col_ < width && 0 < newRow + row_ && newRow + row_ < height){
-
-                                float f = fabs((float)row_ + 0.5f - a_) * fabs((float)col_ + 0.5f - b_);
-
-                                r += f * image[(newRow + row_) * width + newCol + col_][0];
-                                g += f * image[(newRow + row_) * width + newCol + col_][1];
-                                b += f * image[(newRow + row_) * width + newCol + col_][2];
-                                a += f * image[(newRow + row_) * width + newCol + col_][3];
-                            }
-                        }
-                    }
-
-                    rectified[row * width + col] = Pixel((int)r, (int)g, (int)b, (int)a);
-
-                }
-            };
-
-            Vector3f L = inverseTransform1 * outputPixel;
-            L[0] += (float)width/2; // shift back so (0,0) top left
-            L[1] += (float)height/2;
-
-            affineTrans(L, m_leftImageLookup, m_leftImage, m_leftImageRectified);
-
-
-            Vector3f R = inverseTransform2 * outputPixel;
-            R[0] += (float)width/2;
-            R[1] += (float)height/2;
-
-            affineTrans(R, m_rightImageLookup, m_rightImage, m_rightImageRectified);
-        }
-    }
-
-    //  cv::warpPerspective( leftImage->matrix(), v1->matrix(), Hp1, width*height );
-    //  cv::warpPerspective( rightImage->matrix(), v2->matrix(), Hp2, width*height );
-
-    //  setLeftImageRectified(v1);
-    //  setRightImageRectified(v2);
-
-}
-*/

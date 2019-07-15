@@ -67,7 +67,7 @@ public:
          * */
 
         m_focalLength = 700.0f;
-        m_baseline = 100.0f;
+        m_baseline = 2000.0f;
         m_doffs = 100.0f;
 
         // width/height needed for homographies
@@ -85,7 +85,7 @@ public:
                              0.0f, 0.0f, 1.0f;
 
         m_leftExtrinsics.setIdentity();
-        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
+        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 2000.0f, // 15 degree of rotation
                                 0.0f, 1.0f, 0.0f, 0.0f,
                                 -0.259f, 0.0f, 0.966f, 0.0f,
                                 0.0f, 0.0f, 0.0f, 1.0f;
@@ -138,6 +138,17 @@ public:
 
         Vector3f T = E.block<3,1>(0,3);
         Matrix3f R = E.block<3,3>(0,0);
+
+        Matrix3f id;
+        id.setIdentity();
+
+        if(3.f - R.trace() < 0.0001f) {
+            m_H.setIdentity();
+            m_H_.setIdentity();
+            m_S.setIdentity();
+            return true;
+        }
+
         Matrix3f T_hat = hat(T);
         Matrix3f F = K.inverse().transpose() * T_hat * R * K.inverse();
         Vector3f e = K * R.transpose() * T;
@@ -224,6 +235,8 @@ public:
         m_H << Hr * Hp;
         m_H_ << Hr_ * Hp_;
         m_S = determineScaleMatrix();
+
+        return true;
     }
 
     /**
