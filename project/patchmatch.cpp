@@ -12,7 +12,7 @@
 #define DISPARITY_INVALID -1.f
 #define NEIGHBORHOOD_INVALID INT_MAX
 
-#define NUM_ITERATIONS 2
+#define NUM_ITERATIONS 5
 #define ALPHA 0.2
 
 /**
@@ -65,7 +65,7 @@ void PatchMatch::computeDisparity()
         progressBar((float) i / NUM_ITERATIONS, "Finding correspondences...");
 
 #pragma omp parallel for
-        for (int y = m_patchSize/2; y < (m_height - m_patchSize / 2); y++){ // divided by 10 to save time... CHANGE BACK
+        for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
             for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
                 int idx = y * m_width + x;
 
@@ -102,10 +102,21 @@ void PatchMatch::computeDisparity()
 
 void PatchMatch::propagate(int idx)
 {
-    if (m_neighborhood[idx - 1] < m_neighborhood[idx]){
+    if(idx - 1 % m_width > 0){
+        int leftNeighborhood = evalNeighborhood(idx, m_matches[idx - 1]);
+        if (leftNeighborhood < m_neighborhood[idx]){
 
-        m_neighborhood[idx] = evalNeighborhood(idx, m_matches[idx - 1]);
-        m_matches[idx] = m_matches[idx - 1];
+            m_neighborhood[idx] = leftNeighborhood;
+            m_matches[idx] = m_matches[idx - 1];
+        }
+    }
+
+    if(idx > m_width){
+        int aboveNeighborhood = evalNeighborhood(idx, m_matches[idx - m_width] + m_width);
+        if(aboveNeighborhood < m_neighborhood[idx]){
+            m_neighborhood[idx] = aboveNeighborhood;
+            m_matches[idx] = m_matches[idx - m_width] + m_width;
+        }
     }
 }
 
@@ -117,10 +128,10 @@ void PatchMatch::randomSearch(int row, int idx)
         // pick a random pixel in current row
         double r = 2.0 * rand() / RAND_MAX - 1;
         int tested_disparity = m_matches[idx] + ceil(search_radius * r);
-        int tested_disparity_col = tested_disparity - row * m_width;
+        int tested_disparity_col = tested_disparity % m_width;
 
         // test if random pixel is in image
-        if (tested_disparity_col < 0 || tested_disparity_col >= m_width){
+        if (tested_disparity_col % m_width < m_patchSize/2 || tested_disparity_col >= m_width - m_patchSize/2 || tested_disparity < 0 || tested_disparity >= m_width * m_height){
             continue;
         }
 
