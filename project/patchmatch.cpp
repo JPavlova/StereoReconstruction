@@ -108,10 +108,11 @@ void PatchMatch::propagate(int idx)
     }
 
     if(idx > m_width){
-        int aboveNeighborhood = evalNeighborhood(idx, m_matches[idx - m_width] + m_width);
+        int idx_propagated = m_matches[idx - m_width] + m_width;
+        int aboveNeighborhood = evalNeighborhood(idx, idx_propagated);
         if(aboveNeighborhood < m_neighborhood[idx]){
             m_neighborhood[idx] = aboveNeighborhood;
-            m_matches[idx] = m_matches[idx - m_width] + m_width;
+            m_matches[idx] = idx_propagated;
         }
     }
 }
@@ -123,19 +124,19 @@ void PatchMatch::randomSearch(int row, int idx)
     while (search_radius > 1){
         // pick a random pixel in current row
         double r = 2.0 * rand() / RAND_MAX - 1;
-        int tested_disparity = m_matches[idx] + ceil(search_radius * r);
-        int tested_disparity_col = tested_disparity % m_width;
+        int tested_match = m_matches[idx] + ceil(search_radius * r);
+        int tested_match_col = tested_match - row * m_width;
 
         // test if random pixel is in image
-        if (tested_disparity_col % m_width < m_patchSize/2 || tested_disparity_col >= m_width - m_patchSize/2 || tested_disparity < 0 || tested_disparity >= m_width * m_height){
+        if (tested_match_col < m_patchSize/2 || tested_match_col >= m_width - m_patchSize/2){
             continue;
         }
 
         // compute pixel distance and update if patch matches better
-        int neighborhood = evalNeighborhood(idx, tested_disparity);
+        int neighborhood = evalNeighborhood(idx, tested_match);
         if (m_neighborhood[idx] > neighborhood){
             m_neighborhood[idx] = neighborhood;
-            m_matches[idx] = tested_disparity;
+            m_matches[idx] = tested_match;
         }
 
         search_radius *= ALPHA;
@@ -168,7 +169,6 @@ int PatchMatch::evalNeighborhood(int center_left, int center_right)
 
             Vector4i pixelDistance = m_leftImage[idx_left].value().cast<int>() - m_rightImage[idx_right].value().cast<int>();
             totalDistance += pixelDistance.dot(pixelDistance);
-            //totalDistance += pixelDistance.norm();
         }
     }
 
