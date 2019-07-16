@@ -92,10 +92,7 @@ void PatchMatch::computeDisparity()
         int idxLeft = idx;
         int idxRight = m_matches[idx];
 
-        int colLeft = idxLeft % m_width;
-        int colRight = idxRight % m_width;
-
-        m_disparity[idx] = colRight - colLeft;
+        m_disparity[idx] = idxRight - idxLeft;
     }
 }
 
