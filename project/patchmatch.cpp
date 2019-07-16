@@ -78,6 +78,8 @@ void PatchMatch::computeDisparity()
         }
     }
 
+    int min_disparity = 0;
+
     // Compute disparity based on original image indices
 #pragma omp parallel for
     for(int idx = 0; idx < m_width * m_height; idx++) {
@@ -93,6 +95,14 @@ void PatchMatch::computeDisparity()
         int idxRight = m_matches[idx];
 
         m_disparity[idx] = idxRight - idxLeft;
+
+        if(m_disparity[idx] < min_disparity){
+            min_disparity = m_disparity[idx];
+        }
+    }
+
+    for(int idx = 0; idx < m_width * m_height; idx++){
+        m_disparity[idx] -= min_disparity;
     }
 }
 
