@@ -9,10 +9,10 @@
 
 
 #define MATCH_INVALID -1
-#define DISPARITY_INVALID -1.f
+#define DISPARITY_INVALID MINF
 #define NEIGHBORHOOD_INVALID INT_MAX
 
-#define NUM_ITERATIONS 5
+#define NUM_ITERATIONS 2
 #define ALPHA 0.2
 
 /**
@@ -95,8 +95,7 @@ void PatchMatch::computeDisparity()
         int colLeft = idxLeft % m_width;
         int colRight = idxRight % m_width;
 
-        m_disparity[idx] = abs(colRight - colLeft);
-
+        m_disparity[idx] = colRight - colLeft;
     }
 }
 
