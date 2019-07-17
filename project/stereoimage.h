@@ -5,6 +5,8 @@
 #include "prerequisites.h"
 #include "camerasensor.h"
 #include <iostream>
+#include <random>
+#include <fstream>
 
 using namespace Eigen;
 
@@ -44,6 +46,7 @@ class StereoImage {
         float *getDepthImage();
         float *getRectifiedDepthImage();
         float *getDisparity();
+        void writeDepthMapToFile();
 
 private:
         CameraSensor *sensor;
