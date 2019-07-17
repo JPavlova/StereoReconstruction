@@ -223,9 +223,7 @@ void StereoImage::disparityToDepth()
 #pragma omp parallel for
     for(int i = 0; i< m_leftImageWidth * m_leftImageHeight; i++)
     {
-        if (m_disparity[i] != MINF) {
-            m_depthImageRectified[i] =  baseline * focalLength / (float)m_disparity[i];
-        }
+        m_depthImageRectified[i] = log(baseline * focalLength / m_disparity[i]);
     }
 }
 
