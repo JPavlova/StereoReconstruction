@@ -41,7 +41,7 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
     }
 
     //initialize correspondences with their own index (exclude borders not reachable by patch match)
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
     for(int y = patchSize / 2; y < m_height - patchSize / 2; y++){
         for(int x = patchSize / 2; x < m_width - patchSize /2; x++){
 
@@ -64,10 +64,9 @@ void PatchMatch::computeDisparity()
     for (int i = 0; i < NUM_ITERATIONS; i++){
         progressBar((float) i / NUM_ITERATIONS, "Finding correspondences...");
 
-#pragma omp parallel for
-        for (int y = m_patchSize/2; y < m_height - m_patchSize / 2; y++){
-            for (int x = m_patchSize / 2; x < m_width - m_patchSize / 2; x++){
-                int idx = y * m_width + x;
+        for (int col = m_patchSize/2; col < m_width - m_patchSize / 2; col++){
+            for (int row = m_patchSize / 2; row < m_height - m_patchSize / 2; row++){
+                int idx = row * m_width + col;
 
                 if(m_matches[idx] == MATCH_INVALID){
                     continue;
@@ -75,7 +74,7 @@ void PatchMatch::computeDisparity()
                 if (m_neighborhood[idx] != NEIGHBORHOOD_INVALID) {
                     propagate(idx);
                 }
-                randomSearch(y, idx);
+                randomSearch(row, idx);
             }
         }
     }
@@ -110,7 +109,7 @@ void PatchMatch::computeDisparity()
 
 void PatchMatch::propagate(int idx)
 {
-    if(idx - 1 % m_width > 0){
+    if((idx - 1) % m_width > 0){
         int leftNeighborhood = evalNeighborhood(idx, m_matches[idx - 1]);
         if (leftNeighborhood < m_neighborhood[idx]){
 
@@ -146,7 +145,7 @@ void PatchMatch::randomSearch(int row, int idx)
 
         // compute pixel distance and update if patch matches better
         int neighborhood = evalNeighborhood(idx, tested_match);
-        if (m_neighborhood[idx] > neighborhood){
+        if (neighborhood < m_neighborhood[idx]){
             m_neighborhood[idx] = neighborhood;
             m_matches[idx] = tested_match;
         }
@@ -168,21 +167,23 @@ void PatchMatch::randomSearch(int row, int idx)
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
 {
     int totalDistance = 0;
-
+    bool invalid = false;
+#pragma omp parallel for collapse(2)
     for (int i = -m_patchSize / 2; i <= m_patchSize / 2; i++){
         for (int j = -m_patchSize / 2; j <= m_patchSize / 2; j++){
 
             int idx_left = center_left + i * m_width + j;
             int idx_right = center_right + i * m_width + j;
 
-            if(!m_leftImage[idx_left].has_value() || !m_rightImage[idx_right].has_value()){
-                return NEIGHBORHOOD_INVALID;
+            if(!m_leftImage[idx_left].has_value() || !m_rightImage[idx_right].has_value() || invalid == true){
+                invalid = true;
             }
-
-            Vector4i pixelDistance = m_leftImage[idx_left].value().cast<int>() - m_rightImage[idx_right].value().cast<int>();
-            totalDistance += pixelDistance.dot(pixelDistance);
+            else {
+                Vector4i pixelDistance = m_leftImage[idx_left].value().cast<int>() - m_rightImage[idx_right].value().cast<int>();
+                totalDistance += pixelDistance.dot(pixelDistance);
+            }
         }
     }
 
-    return totalDistance;
+    return invalid ? NEIGHBORHOOD_INVALID : totalDistance;
 }
