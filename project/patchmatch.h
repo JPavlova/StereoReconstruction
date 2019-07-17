@@ -22,8 +22,8 @@ public:
 
 private:
     int evalNeighborhood(int center_left, int center_right);
-    void propagate(int idx);
-    void randomSearch(int row, int idx);
+    void propagate(int idx, int i);
+    void randomSearch(int idx);
 
     StereoImage* m_stereoImage;
 
