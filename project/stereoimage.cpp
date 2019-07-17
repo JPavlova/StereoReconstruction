@@ -77,7 +77,7 @@ bool StereoImage::backproject_frame(Vertex *vertices)
             }
             else {
                 Vector3f uvw = Vector3f(u*w, v*w, w);
-                Vector3f xyz = leftIntrinsics * uvw; // already in world coordinates, no need for extrinsics-mult.
+                Vector3f xyz = leftIntrinsicsInv* uvw; // already in world coordinates, no need for extrinsics-mult.
 
                 // color retrieval
                 Pixel rgb = colorMap[i];
