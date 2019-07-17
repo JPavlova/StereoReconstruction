@@ -64,20 +64,16 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-         writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-         writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+//        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+//        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
         patchMatch.computeDisparity();
-        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 1000.f);
+        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
         testImage.disparityToDepth();
         testImage.derectifyDepthMap();
-        for (int i = 0; i < 20; ++i) {
-            int max = (i+1)*500;
-            writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth_"  + std::to_string(max) + ".png", (float)max);
-
-        }
+        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
 
         // point cloud/ backprojection
         /*

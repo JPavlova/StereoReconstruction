@@ -1,12 +1,4 @@
 #include "stereoimage.h"
-#include <random>
-//#include <opencv4/opencv2/core.hpp>
-//#include <opencv4/opencv2/highgui.hpp>
-//#include <opencv4/opencv2/features2d.hpp>
-//#include <opencv4/opencv2/xfeatures2d.hpp>
-//#include <opencv4/opencv2/xfeatures2d/nonfree.hpp>
-//#include <opencv4/opencv2/cvconfig.h>
-//#include <opencv4/opencv2/imgproc.hpp>
 
 #define BILINEAR_INTERPOLATION false
 
@@ -247,6 +239,18 @@ static Pixel* unOptionalize(std::optional<Pixel>* image, int size) {
         n_image[i] = image[i].value();
     }
     return n_image;
+}
+
+void StereoImage::writeDepthMapToFile() {
+    std::ofstream myfile;
+    myfile.open("depth.txt");
+    for (int row = 0; row < m_leftImageHeight; row++) {
+        for (int col = 0; col < m_leftImageWidth; col++) {
+            myfile << m_depthImage[row*m_leftImageWidth+col] << "\t";
+        }
+        myfile << "\n";
+    }
+    myfile.close();
 }
 
 
