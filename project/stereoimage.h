@@ -48,9 +48,9 @@ class StereoImage {
         float *getDisparity();
         void writeDepthMapToFile();
 
-private:
         CameraSensor *sensor;
 
+private:
         // raw data
         Pixel* m_leftImage;
         Pixel* m_rightImage;

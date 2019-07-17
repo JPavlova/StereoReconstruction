@@ -48,6 +48,114 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
     return true;
 }
 
+bool writeDisparityImageRaw(int *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename) {
+    // using freeimage ideally
+    FreeImage_Initialise();
+    FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
+    RGBQUAD color;
+
+    if (!bitmap) {
+        exit(1);
+        std::cerr << "could not allocate memory for depth image" << std::endl;
+    }
+    // minimal, maximal depth values
+    float minimum = INF;
+    float maximum =MINF;
+    float current;
+    for (int i = 0; i < width * height; i++) {
+        current = depthImage[i];
+        if ((current != MINF) && (current != INF)){
+            if (current > maximum) {
+                maximum = current;
+            }
+            if (current < minimum) {
+                minimum = current;
+            }
+        }
+    }
+
+    float factor = 0.0f;
+    if ((maximum - minimum) > EPSILON) {
+        factor = 1.0f / (maximum - minimum);
+    }
+
+    int i = 0;
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            i = (height - h) * width + w;
+            current = depthImage[i];
+            color.rgbRed = (BYTE) current * factor * 255;
+            color.rgbGreen = (BYTE) current * factor * 255;
+            color.rgbBlue = (BYTE) current * factor * 255;
+            FreeImage_SetPixelColor(bitmap, w, h, &color);
+        }
+    }
+
+    if (FreeImage_Save(FIF_PNG, bitmap, filename.c_str(), 0))
+        std::cout << "Disparity image successfully saved!" << std::endl;
+
+    FreeImage_DeInitialise();
+
+    return true;
+}
+
+bool writeDepthImageRaw(float *depthImage, int width, int height, const std::string path) {
+    FreeImage_Initialise();
+    FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
+    RGBQUAD color;
+
+    if (!bitmap) {
+        exit(1);
+        std::cerr << "could not allocate memory for depth image" << std::endl;
+    }
+    // minimal, maximal depth values
+    float minimum = INF;
+    float maximum = MINF;
+    float avg = 0;
+    float current;
+    for (int i = 0; i < width * height; i++) {
+        current = depthImage[i];
+        if ((current != MINF) && (current != INF)){
+            avg += current;
+            if (current > maximum) {
+                maximum = current;
+            }
+            if (current < minimum) {
+                minimum = current;
+            }
+        }
+    }
+    avg /= (width * height);
+    std::cout << "maximum: " << maximum << std::endl;
+    std::cout << "minimum: " << minimum << std::endl;
+    std::cout << "average: " << avg << std::endl;
+
+    float factor = 0.0f;
+    if ((maximum - minimum) > EPSILON) {
+        factor = 1.0f / (maximum - minimum);
+    }
+
+    int i = 0;
+    for (int h = 0; h < height; h++) {
+        for (int w = 0; w < width; w++) {
+            i = (height - h) * width + w; // does this work now?
+            current = depthImage[i];
+            color.rgbRed = (BYTE) (current * factor * 255);
+            color.rgbGreen = (BYTE) (current * factor * 255);
+            color.rgbBlue = (BYTE) (current * factor * 255);
+            FreeImage_SetPixelColor(bitmap, w, h, &color);
+        }
+    }
+
+    if (FreeImage_Save(FIF_PNG, bitmap, path.c_str(), 0))
+        std::cout << "Depth image successfully saved!" << std::endl;
+
+    FreeImage_DeInitialise();
+
+    return true;
+}
+
+
 /**
  * @brief writeDepthImage
  * @param depthImage
@@ -139,8 +247,8 @@ bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const 
     unsigned nFaces = 0;
 
     int i = 0;
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height-1; y++) {
+        for (int x = 0; x < width-1; x++) {
             i = y * width + x;
 
             if ((vertices[i].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + 1].position.x() != MINF)) {
@@ -178,8 +286,8 @@ bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const 
 
     // save faces
     i = 0;
-    for (int y = 0; y < height; y++) {
-        for (int x = 0; x < width; x++) {
+    for (int y = 0; y < height-1; y++) {
+        for (int x = 0; x < width-1; x++) {
             i = y * width + x;
             if ((vertices[i].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + 1].position.x() != MINF)) {
                 if (((vertices[i].position - vertices[i + width].position).norm() <= edgeThreshold) &&
