@@ -60,13 +60,12 @@ int main(int argc, char *argv[])
      * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
      * */
 
-    std::string object = "classroom";
+    std::string object = "toys";
     std::string dataDir = "../project/data/blender";
     std::regex regex (".*im[0-9]_" + object + ".png");
 
     CameraSensor sensor;
 
-    std::cout << "Reading calibration file..." << std::endl;
     if(!sensor.Init(dataDir, regex, object)) {
         std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
         return -1;

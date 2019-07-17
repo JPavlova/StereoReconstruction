@@ -1,27 +1,5 @@
+focalLength = 700
+baseline = 2000
 width = 640
 height = 480
-focal_length = 35 mm
-sensor_width = 32 mm
-focal_length_pixel = (focal_length / sensor_width) * width = (35 mm / 32 mm) * 640 = 700
-right camera offset: 100 mm
-right camera rotation: 15 degree
-
-im0: left
-im1: right
-
-depth images: divided by 25.. not valid, but depth visible for comparison
-
-left_intrinsics = [ 700, 0, 320,
-                    0, 700, 240,
-                    0, 0, 1]
-right_intrinsics = [    700, 0, 320,
-                        0, 700, 240,
-                        0, 0, 1]
-left_extrinsics = [ 1, 0, 0, 0,
-                    0, 1, 0, 0,
-                    0, 0, 1, 0,
-                    0, 0, 0, 1]
-right_extrinsics = [    0.966,  0, 0.259,   100,
-                        0,      1, 0,       0,
-                        -0.259, 0, 0.966,   0,
-                        0,      0, 0,       1]
+extrinsics = [0.966, 0, 0.259, 100; 0, 1, 0, 0; -0.259, 0, 0.966, 0; 0, 0, 0, 1]
