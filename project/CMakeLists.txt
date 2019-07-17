@@ -31,14 +31,12 @@ set(HEADER_FILES
     camerasensor.h
     exporter.h
     patchmatch.h
-    patchmatchvectorfield.h
     blockmatch.h
         )
 set(SOURCE_FILES
     FreeImageHelper.cpp
     stereoimage.cpp
     patchmatch.cpp
-    patchmatchvectorfield.cpp
     blockmatch.cpp
         )
 
