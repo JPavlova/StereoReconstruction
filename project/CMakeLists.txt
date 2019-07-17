@@ -12,8 +12,8 @@ find_package(Eigen3 REQUIRED)
 include_directories(${EIGEN3_INCLUDE_DIR})
 
 # Ceres Solver
-find_package(Ceres REQUIRED)
-include_directories(${CERES_INCLUDE_DIRS})
+# find_package(Ceres REQUIRED)
+# include_directories(${CERES_INCLUDE_DIRS})
 
 # FreeImage
 # find_package(FreeImage REQUIRED)
@@ -32,13 +32,16 @@ set(HEADER_FILES
     exporter.h
     patchmatch.h
     patchmatchvectorfield.h
+    blockmatch.h
         )
 set(SOURCE_FILES
     FreeImageHelper.cpp
     stereoimage.cpp
     patchmatch.cpp
     patchmatchvectorfield.cpp
+    blockmatch.cpp
         )
 
 add_executable(stereo_reconstruction main.cpp ${HEADER_FILES} ${SOURCE_FILES})
-target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${CERES_LIBRARIES} ${EIGEN_LIBRARIES} libstdc++fs.a)
+#target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${CERES_LIBRARIES} ${EIGEN_LIBRARIES} libstdc++fs.a)
+target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${EIGEN_LIBRARIES} libstdc++fs.a)

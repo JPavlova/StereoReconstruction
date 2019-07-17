@@ -7,6 +7,7 @@
 #include "exporter.h"
 #include <FreeImage.h>
 #include "patchmatch.h"
+#include "blockmatch.h"
 
 #define PATCH_SIZE 5
 
@@ -64,8 +65,8 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-//        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-//        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
@@ -74,6 +75,15 @@ int main(int argc, char *argv[])
         testImage.disparityToDepth();
         testImage.derectifyDepthMap();
         writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
+
+        // Blockmatch
+//        int blockSize = 5;
+//        int searchWindow = 128;
+//        BlockMatch bm(&testImage, blockSize, searchWindow);
+//        bm.run();
+//        writeDisparityImageRaw(bm.getDisparites(), width, height, DEPTH_MODE::GRAY, "./blockmatch_disparity.png");
+//        testImage.disparityToDepth();
+//        writeDepthImageRaw(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./blockmatch_depth.png");
 
         // point cloud/ backprojection
         /*

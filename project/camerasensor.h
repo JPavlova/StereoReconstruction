@@ -19,7 +19,7 @@ typedef unsigned char BYTE;
 
 // Filesystem namespace as abbreveation
 namespace fs = std::experimental::filesystem;
-const std::regex IMAGE_NAME_REGEX (".*im[0-9].png");
+const std::regex IMAGE_NAME_REGEX (".*imc[0-9].png");
 
 using namespace Eigen;
 
@@ -68,7 +68,7 @@ public:
 
         m_focalLength = 700.0f;
         m_baseline = 2000.0f;
-        m_doffs = 100.0f;
+        m_doffs = 2000.0f; // dont think we need this for blender data
 
         // width/height needed for homographies
         m_leftImageWidth = 640;
@@ -76,20 +76,20 @@ public:
         m_rightImageWidth = 640;
         m_rightImageHeight = 480;
 
-        m_leftIntrinsics << 700.0f, 0.f, 320.0f,
-                            0.0f, 700.0f, 240.0f,
+        m_leftIntrinsics << m_focalLength, 0.f, m_leftImageWidth/2,
+                            0.0f, m_focalLength, m_leftImageHeight/2,
                             0.0f, 0.0f, 1.0f;
 
-        m_rightIntrinsics << 700.0f, 0.f, 320.0f,
-                             0.0f, 700.0f, 240.0f,
+        m_rightIntrinsics << m_focalLength, 0.f, m_rightImageWidth/2,
+                             0.0f, m_focalLength, m_rightImageHeight/2,
                              0.0f, 0.0f, 1.0f;
 
         m_leftExtrinsics.setIdentity();
-        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                -0.259f, 0.0f, 0.966f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
 
+        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
+                                0.0f, 1.0f, 0.0f, 0.0f,
+                                0.0f, 0.0f, 1.0f, 0.0f,
+                                0.0f, 0.0f, 0.0f, 1.0f;
         /*
          * ( cos 0 sin)
          * ( 0   1 0  )
@@ -97,14 +97,15 @@ public:
          *
          * more rotations:
 
-        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, 100.0f, // 0 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
 
         m_rightExtrinsics <<    0.999f, 0.0f, 0.035f, 100.0f, // 2 degree of rotation
                                 0.0f, 1.0f, 0.0f, 0.0f,
                                 -0.035f, 0.0f, 0.999f, 0.0f,
+                                0.0f, 0.0f, 0.0f, 1.0f;
+
+        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
+                                0.0f, 1.0f, 0.0f, 0.0f,
+                                -0.259f, 0.0f, 0.966f, 0.0f,
                                 0.0f, 0.0f, 0.0f, 1.0f;
 
         m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 100.0f, // 45 degree of rotation
@@ -142,7 +143,7 @@ public:
         Matrix3f id;
         id.setIdentity();
 
-        if(3.f - R.trace() < 0.0001f) {
+        if(3.f - R.trace() < EPSILON) {
             m_H.setIdentity();
             m_H_.setIdentity();
             m_S.setIdentity();
