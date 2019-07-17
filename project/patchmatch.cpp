@@ -48,7 +48,7 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
             int idx = y * m_width + x;
 
             if(m_leftImage[idx].has_value()){
-                m_matches[idx] = idx;
+                m_matches[idx] = idx;//y * m_width;
                 m_neighborhood[idx] = evalNeighborhood(idx, idx);
             }
         }
@@ -72,7 +72,9 @@ void PatchMatch::computeDisparity()
                 if(m_matches[idx] == MATCH_INVALID){
                     continue;
                 }
-                propagate(idx);
+                if (m_neighborhood[idx] != NEIGHBORHOOD_INVALID) {
+                    propagate(idx);
+                }
                 randomSearch(y, idx);
             }
         }
