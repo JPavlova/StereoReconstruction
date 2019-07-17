@@ -1,8 +1,10 @@
 #include "blockmatch.h"
 
 BlockMatch::BlockMatch(StereoImage *stereoImage, int blockSize, int searchWindow) :
-    m_leftImage((unsigned char *) stereoImage->getLeftImageRectified()),
-    m_rightImage((unsigned char *) stereoImage->getRightImageRectified()),
+    m_stereoImage(stereoImage),
+    m_leftImage((unsigned char *) stereoImage->getRightImage()), // because is wrong somewhere else in the code...
+    //TODO: actually use unrectified images here.. however only working with original images.
+    m_rightImage((unsigned char *) stereoImage->getLeftImage()),
     m_width(stereoImage->getLeftImageWidth()),
     m_height(stereoImage->getLeftImageHeight()),
     m_blockSize(blockSize),
@@ -10,6 +12,7 @@ BlockMatch::BlockMatch(StereoImage *stereoImage, int blockSize, int searchWindow
 {
     m_nearestNeighborField = new int[m_width * m_height]();
     m_patchDistances = new float[m_width * m_height]();
+    m_depthMap = new float[m_width * m_height]();
 
     int i = 0;
     for (int y = 0; y < m_height; y++) {
@@ -41,9 +44,31 @@ void BlockMatch::run()
     }
 }
 
-int *BlockMatch::getDisparites()
+int *BlockMatch::getDisparityMap()
 {
     return m_nearestNeighborField;
+}
+
+float *BlockMatch::getDepthMap()
+{
+    float z_inPixel = 0.0f;
+    float result = MINF;
+    float focalLength = m_stereoImage->sensor->getFocalLength();
+    float baseline = m_stereoImage->sensor->getBaseline();
+    std::cout << "f: " << focalLength << std::endl;
+    std::cout << "baseline: " << baseline << std::endl;
+
+    for (int i = 0; i < m_width * m_height; i++) {
+        if (m_nearestNeighborField[i] > 0) {
+            z_inPixel = (baseline * focalLength) / m_nearestNeighborField[i];
+            m_depthMap[i] = z_inPixel;
+        }
+        else {
+            m_depthMap[i] = MINF;
+        }
+    }
+
+    return m_depthMap;
 }
 
 float BlockMatch::patchDistance(int posX, int posY, int offsetX) {

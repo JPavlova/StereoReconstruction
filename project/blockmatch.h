@@ -9,7 +9,8 @@ public:
     BlockMatch(StereoImage *stereoImage, int blockSize, int searchWindow);
 
     void run();
-    int *getDisparites();
+    int *getDisparityMap();
+    float *getDepthMap();
 
 private:
     float patchDistance(int posX, int posY, int offsetX);
@@ -24,9 +25,11 @@ private:
     int m_width;
     int m_height;
 
+    StereoImage *m_stereoImage;
     unsigned char *m_leftImage, *m_rightImage;
     int *m_nearestNeighborField;
     float *m_patchDistances;
+    float *m_depthMap;
 };
 
 #endif // BLOCKMATCH_H
