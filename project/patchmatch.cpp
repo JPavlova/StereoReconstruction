@@ -1,12 +1,4 @@
 #include "patchmatch.h"
-#include "prerequisites.h"
-
-#include <cmath>
-#include <Eigen/Eigen>
-#include <cstdlib>
-#include <optional>
-#include <omp.h>
-
 
 #define MATCH_INVALID -1
 #define DISPARITY_INVALID MINF
@@ -39,20 +31,6 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
         m_matches[i] = MATCH_INVALID;
         m_neighborhood[i] = NEIGHBORHOOD_INVALID;
     }
-
-    //initialize correspondences with their own index (exclude borders not reachable by patch match)
-#pragma omp parallel for collapse(2)
-    for(int y = patchSize / 2; y < m_height - patchSize / 2; y++){
-        for(int x = patchSize / 2; x < m_width - patchSize /2; x++){
-
-            int idx = y * m_width + x;
-
-            if(m_leftImage[idx].has_value()){
-                m_matches[idx] = idx;//y * m_width;
-                m_neighborhood[idx] = evalNeighborhood(idx, idx);
-            }
-        }
-    }
 }
 
 /**
@@ -62,19 +40,17 @@ PatchMatch::PatchMatch(StereoImage* stereoImage, int width, int height, int patc
 void PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
+
         progressBar((float) i / NUM_ITERATIONS, "Finding correspondences...");
 
         for (int col = m_patchSize/2; col < m_width - m_patchSize / 2; col++){
             for (int row = m_patchSize / 2; row < m_height - m_patchSize / 2; row++){
                 int idx = row * m_width + col;
 
-                if(m_matches[idx] == MATCH_INVALID){
-                    continue;
+                if(m_leftImage[idx].has_value()){
+                    randomSearch(idx);
+                    propagate(idx+1);
                 }
-                if (m_neighborhood[idx] != NEIGHBORHOOD_INVALID) {
-                    propagate(idx);
-                }
-                randomSearch(row, idx);
             }
         }
     }
@@ -109,48 +85,39 @@ void PatchMatch::computeDisparity()
 
 void PatchMatch::propagate(int idx)
 {
-    if((idx - 1) % m_width > 0){
-        int leftNeighborhood = evalNeighborhood(idx, m_matches[idx - 1]);
+    if(m_neighborhood[idx-1] == NEIGHBORHOOD_INVALID) return;
+
+    if((idx - 1) % m_width > 0 && m_matches[idx - 1] % m_width > 0){
+        int leftNeighborhood = evalNeighborhood(idx, m_matches[idx - 1] + 1);
         if (leftNeighborhood < m_neighborhood[idx]){
-
             m_neighborhood[idx] = leftNeighborhood;
-            m_matches[idx] = m_matches[idx - 1];
-        }
-    }
-
-    if(idx > m_width){
-        int idx_propagated = m_matches[idx - m_width] + m_width;
-        int aboveNeighborhood = evalNeighborhood(idx, idx_propagated);
-        if(aboveNeighborhood < m_neighborhood[idx]){
-            m_neighborhood[idx] = aboveNeighborhood;
-            m_matches[idx] = idx_propagated;
+            m_matches[idx] = m_matches[idx - 1] + 1;
+//            std::cout << "Propagated Index " << m_matches[idx - 1] << " -> " << m_matches[idx - 1] + 1 << " from Pixel " << idx-1 << " to " << idx << std::endl;
         }
     }
 }
 
-void PatchMatch::randomSearch(int row, int idx)
+void PatchMatch::randomSearch(int idx)
 {
-    double search_radius = ALPHA * m_width;
+//    double search_radius = m_width - m_patchSize;
+    int rowEnd = (idx/m_width+1)*m_width - m_patchSize/2;
+    int lower = idx;
+    int higher = mymax(rowEnd, rowEnd);
+    int range = higher - lower;
 
-    while (search_radius > 1){
+    for (int iter = 0; iter < 15; ++iter) {
         // pick a random pixel in current row
-        double r = 2.0 * rand() / RAND_MAX - 1;
-        int tested_match = m_matches[idx] + ceil(search_radius * r);
-        int tested_match_col = tested_match - row * m_width;
-
-        // test if random pixel is in image
-        if (tested_match_col < m_patchSize/2 || tested_match_col >= m_width - m_patchSize/2){
-            continue;
-        }
+        double r = 1.0 * rand() / RAND_MAX;
+        int tested_match = lower + range * r;
+//        std::cout << "Pixel: " << idx << " Random nr: " << r << ", tested match: " << tested_match << ", tested match col: " << range * r << std::endl;
 
         // compute pixel distance and update if patch matches better
         int neighborhood = evalNeighborhood(idx, tested_match);
         if (neighborhood < m_neighborhood[idx]){
             m_neighborhood[idx] = neighborhood;
             m_matches[idx] = tested_match;
+//            std::cout << "Found new match for " << idx << ": " << tested_match << std::endl;
         }
-
-        search_radius *= ALPHA;
     }
 }
 
@@ -166,6 +133,7 @@ void PatchMatch::randomSearch(int row, int idx)
  */
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
 {
+
     int totalDistance = 0;
     bool invalid = false;
 #pragma omp parallel for collapse(2)

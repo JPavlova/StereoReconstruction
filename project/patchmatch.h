@@ -3,6 +3,11 @@
 
 #include "stereoimage.h"
 #include <optional>
+#include "prerequisites.h"
+#include <cmath>
+#include <Eigen/Eigen>
+#include <cstdlib>
+#include <omp.h>
 
 class PatchMatch
 {
@@ -23,7 +28,7 @@ public:
 private:
     int evalNeighborhood(int center_left, int center_right);
     void propagate(int idx);
-    void randomSearch(int row, int idx);
+    void randomSearch(int idx);
 
     StereoImage* m_stereoImage;
 

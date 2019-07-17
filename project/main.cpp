@@ -7,9 +7,10 @@
 #include "exporter.h"
 #include <FreeImage.h>
 #include "patchmatch.h"
+#include "patchmatchvectorfield.h"
 #include "blockmatch.h"
 
-#define PATCH_SIZE 5
+#define PATCH_SIZE 3
 
 // MAIN FILE TO RUN PIPELINE
 
@@ -65,26 +66,13 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-//        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-//        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
-
         // Patchmatch
-//        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
-//        patchMatch.computeDisparity();
-//        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
-//        testImage.disparityToDepth();
-//        testImage.derectifyDepthMap();
-//        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
-
-        // Blockmatch
-        // . CURRENTLY ONLY WORK WITH NON-RECTIFIED IMAGES, FOR WHATEVER REASONS
-        // . IN BLOCKMATCH, THE LEFT AND RIGHT IMAGES ARE SWITCHED BECAUSE I THINK THE MAIN CODE SWITCHES LEFT AND RIGHT IMAGES ALSO, WE HAVE TO CHANGE THAT.
-        int blockSize = 5;
-        int searchWindow = 128;
-        BlockMatch bm(&testImage, blockSize, searchWindow);
-        bm.run();
-        writeDisparityImageRaw(bm.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./blockmatch_disparity.png");
-        writeDepthImageRaw(bm.getDepthMap(), width, height, "./blockmatch_depth.png");
+        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
+        patchMatch.computeDisparity();
+        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
+        testImage.disparityToDepth();
+        testImage.derectifyDepthMap();
+        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
 
         // point cloud/ backprojection
         /*

@@ -51,6 +51,18 @@ static void progressBar(float progress, std::string title) {
     }
 }
 
+static int square(int a) {
+    return a*a;
+}
+
+static int mymax(int a, int b) {
+    return a > b ? a : b;
+}
+
+static int mymin(int a, int b) {
+    return a < b ? a : b;
+}
+
 // for debugging
 static void my_print_vector(Eigen::Vector3f v) {
     std::cout << v(0) << ", " << v.y() << ", " << v.z() << std::endl;
