@@ -67,7 +67,6 @@ void PatchMatch::computeDisparity()
             continue;
         }
 
-        // TODO: In case disparity is not just difference of x values, rewrite
         int idxLeft = idx;
         int idxRight = m_matches[idx];
 
@@ -105,7 +104,8 @@ void PatchMatch::randomSearch(int idx)
     int higher = mymax(rowEnd, rowEnd);
     int range = higher - lower;
 
-    for (int iter = 0; iter < 15; ++iter) {
+#pragma omp parallel for
+    for (int iter = 0; iter < 5; ++iter) {
         // pick a random pixel in current row
         double r = 1.0 * rand() / RAND_MAX;
         int tested_match = lower + range * r;
