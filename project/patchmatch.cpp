@@ -72,13 +72,11 @@ void PatchMatch::computeDisparity()
                 if(m_matches[idx] == MATCH_INVALID){
                     continue;
                 }
-                propagate(idx);
+                propagate(idx, i);
                 randomSearch(y, idx);
             }
         }
     }
-
-    int min_disparity = 0;
 
     // Compute disparity based on original image indices
 #pragma omp parallel for
@@ -94,35 +92,47 @@ void PatchMatch::computeDisparity()
         int idxLeft = idx;
         int idxRight = m_matches[idx];
 
-        m_disparity[idx] = idxRight - idxLeft;
+        m_disparity[idx] = idxLeft - idxRight;
 
-        if(m_disparity[idx] < min_disparity){
-            min_disparity = m_disparity[idx];
+        if(m_disparity[idx] < 0){
+            m_disparity[idx] = 0;
         }
-    }
-
-    for(int idx = 0; idx < m_width * m_height; idx++){
-        m_disparity[idx] -= min_disparity;
     }
 }
 
-void PatchMatch::propagate(int idx)
+void PatchMatch::propagate(int idx, int iteration)
 {
-    if(idx - 1 % m_width > 0){
-        int leftNeighborhood = evalNeighborhood(idx, m_matches[idx - 1]);
-        if (leftNeighborhood < m_neighborhood[idx]){
+    bool even = iteration % 2 == 0;
 
-            m_neighborhood[idx] = leftNeighborhood;
-            m_matches[idx] = m_matches[idx - 1];
+    if((idx - 1) % m_width > m_patchSize/2 && !even|| (idx + 1) % m_width < m_width - m_patchSize/2 && even){
+
+        //consider left neighbor for odd iterations
+        int idx_propagated = even ? m_matches[idx + 1] : m_matches[idx -1];
+
+        if(idx_propagated > idx){
+
+            int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
+
+            if (neighborhood_propagated < m_neighborhood[idx]){
+                m_neighborhood[idx] = neighborhood_propagated;
+                m_matches[idx] = idx_propagated;
+            }
         }
     }
 
-    if(idx > m_width){
-        int idx_propagated = m_matches[idx - m_width] + m_width;
-        int aboveNeighborhood = evalNeighborhood(idx, idx_propagated);
-        if(aboveNeighborhood < m_neighborhood[idx]){
-            m_neighborhood[idx] = aboveNeighborhood;
-            m_matches[idx] = idx_propagated;
+    if(idx > (m_patchSize/2 + 1) * m_width && !even || idx < (m_height - m_patchSize/2 - 1) * m_width && even){
+
+        //consider bottom neighbor for odd iterations
+        int idx_propagated = even ? m_matches[idx + m_width] - m_width : m_matches[idx - m_width] + m_width;
+
+        if(idx_propagated > idx){
+
+            int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
+
+            if(neighborhood_propagated < m_neighborhood[idx]){
+                m_neighborhood[idx] = neighborhood_propagated;
+                m_matches[idx] = idx_propagated;
+            }
         }
     }
 }
@@ -131,16 +141,14 @@ void PatchMatch::randomSearch(int row, int idx)
 {
     double search_radius = ALPHA * m_width;
 
-    while (search_radius > 1){
-        // pick a random pixel in current row
-        double r = 2.0 * rand() / RAND_MAX - 1;
-        int tested_match = m_matches[idx] + ceil(search_radius * r);
-        int tested_match_col = tested_match - row * m_width;
+    if(search_radius > idx % m_width - m_patchSize/2){
+        search_radius = idx % m_width - m_patchSize/2;
+    }
 
-        // test if random pixel is in image
-        if (tested_match_col < m_patchSize/2 || tested_match_col >= m_width - m_patchSize/2){
-            continue;
-        }
+    while (search_radius > 1){
+        // pick a random pixel in current row (only to the left)
+        double r = double(rand()) / RAND_MAX;
+        int tested_match = m_matches[idx] - ceil(search_radius * r);
 
         // compute pixel distance and update if patch matches better
         int neighborhood = evalNeighborhood(idx, tested_match);
@@ -157,11 +165,9 @@ void PatchMatch::randomSearch(int row, int idx)
  * @brief PatchMatch::evalNeighborhood
  * This method calculates the summed pixel distances between two patches. Patches are identified by their centers.
  * This method returns NEIGHBORHOOD_INVALID if any pixel of the patch has no value.
- * TODO: maybe change that?-> Still calculate the pixel distance for invalid patches
  *
  * @param center_left
  * @param center_right
- * @return
  */
 int PatchMatch::evalNeighborhood(int center_left, int center_right)
 {
