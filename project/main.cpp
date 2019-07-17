@@ -10,7 +10,7 @@
 #include "patchmatchvectorfield.h"
 #include "blockmatch.h"
 
-#define PATCH_SIZE 3
+#define PATCH_SIZE 5
 
 // MAIN FILE TO RUN PIPELINE
 
@@ -47,11 +47,27 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-    //std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
+    /*
+     * CALIBRATION DATA SETUP:
+     *
+     * focalLength = *.*
+     * baseline = *.*
+     * width = *
+     * height = *
+     *
+     * optional: extrinsic as transformation between left-right
+     *
+     * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
+     * */
+
+    std::string object = "classroom";
     std::string dataDir = "../project/data/blender";
+    std::regex regex (".*im[0-9]_" + object + ".png");
+
     CameraSensor sensor;
 
-    if(!sensor.Init(dataDir)) {
+    std::cout << "Reading calibration file..." << std::endl;
+    if(!sensor.Init(dataDir, regex, object)) {
         std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
         return -1;
     }
@@ -69,10 +85,10 @@ int main(int argc, char *argv[])
         // Patchmatch
         PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
         patchMatch.computeDisparity();
-        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
+        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 320.f);
         testImage.disparityToDepth();
         testImage.derectifyDepthMap();
-        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
+        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 15.f);
 
         // point cloud/ backprojection
         /*
