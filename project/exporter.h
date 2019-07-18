@@ -165,7 +165,7 @@ bool writeDepthImageRaw(float *depthImage, int width, int height, const std::str
  * @param filename
  * @return
  */
-bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename, float threshold) {
+bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename, float max) {
     // using freeimage ideally
     FreeImage_Initialise();
     FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
@@ -191,24 +191,30 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     }
     std::cout << "maximum: " << maximum << std::endl;
     std::cout << "minimum: " << minimum << std::endl;
+    if (minimum < 0)
+        minimum = 0;
+    if (maximum > max) {
+        maximum = max;
+    }
+
+    float factor = 0.0f;
+    if ((maximum - minimum) > 0.000001f) {
+        factor = 1.0f / (maximum - minimum);
+    }
 
     int i = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             i = (height - h) * width + w;
-            float current = depthImage[i];
-            if(current < minimum) {
-                current = threshold*5;
+            float current;
+            if(depthImage[i] > max){
+                current = max;
+            } else {
+                current = depthImage[i] - minimum;
             }
-//            std::cout << "Current: " << current << " -> " << (int)(255.f*exp(-3.f/threshold*current)) << std::endl;
-
-            // invert color so near objects (small value -> higher col) displayed brighter
-            // TEST: USE EXPONENTIAL FUNCTION TO HIGHLIGHT DIFFERENCES: 0 -> 255, threshold -> 35, nice scale inbetween by factor 2.f
-            // OUTLIERS scaled so projected onto 0
-            BYTE col = (int)(255.f*exp(-2.f/threshold*current));
-            color.rgbRed = col;
-            color.rgbGreen = col;
-            color.rgbBlue = col;
+            color.rgbRed = (BYTE) current * factor * 255;
+            color.rgbGreen = (BYTE) current * factor * 255;
+            color.rgbBlue = (BYTE) current * factor * 255;
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }
