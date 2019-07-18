@@ -63,6 +63,7 @@ void PatchMatch::computeDisparity()
 {
     for (int i = 0; i < NUM_ITERATIONS; i++){
         progressBar((float) i / NUM_ITERATIONS, "Finding correspondences...");
+
 #pragma omp parallel for
         for (int col = m_patchSize/2; col < m_width - m_patchSize / 2; col++){
             for (int row = m_patchSize / 2; row < m_height - m_patchSize / 2; row++){
@@ -72,9 +73,7 @@ void PatchMatch::computeDisparity()
                     continue;
                 }
 
-                if (m_neighborhood[idx] != NEIGHBORHOOD_INVALID) {
-                    propagate(idx,i);
-                }
+                propagate(idx,i);
                 randomSearch(idx);
             }
         }
@@ -111,7 +110,7 @@ void PatchMatch::propagate(int idx, int iteration)
         //consider left neighbor for odd iterations
         int idx_propagated = even ? m_matches[idx + 1] : m_matches[idx -1];
 
-        if(idx_propagated > idx){
+        if(idx_propagated != MATCH_INVALID && idx_propagated > idx){
 
             int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
 
@@ -127,7 +126,7 @@ void PatchMatch::propagate(int idx, int iteration)
         //consider bottom neighbor for odd iterations
         int idx_propagated = even ? m_matches[idx + m_width] - m_width : m_matches[idx - m_width] + m_width;
 
-        if(idx_propagated > idx){
+        if(idx_propagated != MATCH_INVALID && idx_propagated > idx){
 
             int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
 
@@ -141,11 +140,7 @@ void PatchMatch::propagate(int idx, int iteration)
 
 void PatchMatch::randomSearch(int idx)
 {
-    double search_radius = ALPHA * m_width;
-
-    if(search_radius > idx % m_width - m_patchSize/2){
-        search_radius = idx % m_width - m_patchSize/2;
-    }
+    double search_radius = std::min(ALPHA * m_width, double(m_matches[idx] % m_width - m_patchSize/2));
 
     while (search_radius > 1){
         // pick a random pixel in current row (only to the left)
@@ -157,6 +152,7 @@ void PatchMatch::randomSearch(int idx)
         if (neighborhood < m_neighborhood[idx]){
             m_neighborhood[idx] = neighborhood;
             m_matches[idx] = tested_match;
+            return;
         }
 
         search_radius *= ALPHA;
