@@ -1,19 +1,23 @@
-#ifndef BLOCKMATCH_H
-#define BLOCKMATCH_H
+#ifndef MATCHER_H
+#define MATCHER_H
 
 #include "stereoimage.h"
 
-class BlockMatch
+class Matcher
 {
 public:
-    BlockMatch(StereoImage *stereoImage, int blockSize, int searchWindow);
+    Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, float alpha);
 
-    void run();
+    void runBlockMatch();
+    void runPatchMatch(int iterations);
     int *getDisparityMap();
     float *getDepthMap();
 
 private:
+    void propagate(int x, int y, int mode);
+    void randomSearch(int x, int y);
     float patchDistance(int posX, int posY, int offsetX);
+
     void color(unsigned char *image, int x, int y, int *c);
     float diff(int *c1, int *c2);
     bool validPixel(int x, int y);
@@ -21,7 +25,7 @@ private:
 
     float m_alpha;
     int m_searchWindow;
-    int m_blockSize;
+    int m_patchSize;
     int m_width;
     int m_height;
 
@@ -32,4 +36,4 @@ private:
     float *m_depthMap;
 };
 
-#endif // BLOCKMATCH_H
+#endif // MATCHER_H

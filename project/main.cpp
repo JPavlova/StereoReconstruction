@@ -7,7 +7,7 @@
 #include "exporter.h"
 #include <FreeImage.h>
 #include "patchmatch.h"
-#include "blockmatch.h"
+#include "matcher.h"
 
 #define PATCH_SIZE 5
 
@@ -79,12 +79,15 @@ int main(int argc, char *argv[])
         // Blockmatch
         // . CURRENTLY ONLY WORK WITH NON-RECTIFIED IMAGES, FOR WHATEVER REASONS
         // . IN BLOCKMATCH, THE LEFT AND RIGHT IMAGES ARE SWITCHED BECAUSE I THINK THE MAIN CODE SWITCHES LEFT AND RIGHT IMAGES ALSO, WE HAVE TO CHANGE THAT.
+        int iterations = 5;
+        float alpha = 0.5;
         int blockSize = 5;
-        int searchWindow = 128;
-        BlockMatch bm(&testImage, blockSize, searchWindow);
-        bm.run();
-        writeDisparityImageRaw(bm.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./blockmatch_disparity.png");
-        writeDepthImageRaw(bm.getDepthMap(), width, height, "./blockmatch_depth.png");
+        int searchWindow = width/4;
+        Matcher m(&testImage, blockSize, searchWindow, alpha);
+//        m.runPatchMatch(5);
+        m.runBlockMatch();
+        writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./matcher_disparity.png");
+        writeDepthImageRaw(m.getDepthMap(), width, height, "./matcher_depth.png");
 
         // point cloud/ backprojection
         /*
