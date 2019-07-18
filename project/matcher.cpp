@@ -115,7 +115,6 @@ void Matcher::runBlockMatch()
 {
 #pragma omp parallel for
     for (int y = m_patchSize/2; y < (m_height-m_patchSize/2); y++) {
-        std::cout << "process: " << (y * 100)/m_height << " %" << std::endl;
         for (int x = m_patchSize/2; x < m_width-m_patchSize/2; x++) {
             int i = idx(x, y);
             for (int x2 = x; x2 >= std::max(m_patchSize/2, x-m_searchWindow); x2--) {
