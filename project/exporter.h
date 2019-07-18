@@ -169,12 +169,19 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     // using freeimage ideally
     FreeImage_Initialise();
     FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
-    RGBQUAD color;
 
     if (!bitmap) {
         exit(1);
         std::cerr << "could not allocate memory for depth image" << std::endl;
     }
+
+    float* logDepth = (float*) malloc(width * height * sizeof(float));
+
+#pragma omp parallel for
+    for(int i = 0; i < width * height; i++){
+        logDepth[i] = log(depthImage[i]);
+    }
+
     // minimal, maximal depth values
     float minimum = std::numeric_limits<float>::infinity();
     float maximum =-std::numeric_limits<float>::infinity();
@@ -202,16 +209,19 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         factor = 1.0f / (maximum - minimum);
     }
 
-    int i = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            i = (height - h) * width + w;
+
+            int i = (height - h) * width + w;
+
             float current;
             if(depthImage[i] > max){
                 current = max;
             } else {
                 current = depthImage[i] - minimum;
             }
+
+            RGBQUAD color;
             color.rgbRed = (BYTE) current * factor * 255;
             color.rgbGreen = (BYTE) current * factor * 255;
             color.rgbBlue = (BYTE) current * factor * 255;
@@ -223,6 +233,7 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         std::cout << "Depth image successfully saved!" << std::endl;
 
     FreeImage_DeInitialise();
+    free(logDepth);
 
     return true;
 }
