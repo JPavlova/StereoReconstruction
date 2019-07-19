@@ -12,7 +12,7 @@
 #define DISPARITY_INVALID MINF
 #define NEIGHBORHOOD_INVALID INT_MAX
 
-#define NUM_ITERATIONS 5
+#define NUM_ITERATIONS 20
 #define ALPHA 0.2
 
 /**
@@ -94,10 +94,6 @@ void PatchMatch::computeDisparity()
         int idxRight = m_matches[idx];
 
         m_disparity[idx] = idxLeft - idxRight;
-
-        if(m_disparity[idx] < 0){
-            m_disparity[idx] = 0;
-        }
     }
 }
 
@@ -140,19 +136,19 @@ void PatchMatch::propagate(int idx, int iteration)
 
 void PatchMatch::randomSearch(int idx)
 {
-    double search_radius = std::min(ALPHA * m_width, double(m_matches[idx] % m_width - m_patchSize/2));
+    int prevMatch = m_matches[idx];
+    double search_radius = std::min(ALPHA * m_width, double(prevMatch % m_width - m_patchSize/2));
 
     while (search_radius > 1){
         // pick a random pixel in current row (only to the left)
         double r = double(rand()) / RAND_MAX;
-        int tested_match = m_matches[idx] - ceil(search_radius * r);
+        int tested_match = prevMatch - ceil(search_radius * r);
 
         // compute pixel distance and update if patch matches better
         int neighborhood = evalNeighborhood(idx, tested_match);
         if (neighborhood < m_neighborhood[idx]){
             m_neighborhood[idx] = neighborhood;
             m_matches[idx] = tested_match;
-            return;
         }
 
         search_radius *= ALPHA;
