@@ -1,5 +1,7 @@
 #include "matcher.h"
 
+#define MIN_OVERLAP 0.2f
+
 /**
  * @brief Matcher::Matcher this class encapsulates both matching methods we are considering: BlockMatch and PatchMatch.
  * @param stereoImage
@@ -9,9 +11,8 @@
  */
 Matcher::Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, float alpha) :
     m_stereoImage(stereoImage),
-    m_leftImage((unsigned char *) stereoImage->getRightImage()), // because is wrong somewhere else in the code...
-    //TODO: actually use unrectified images here.. however only working with original images.
-    m_rightImage((unsigned char *) stereoImage->getLeftImage()),
+    m_leftImage(stereoImage->getLeftImageRectified()),
+    m_rightImage(stereoImage->getRightImageRectified()),
     m_width(stereoImage->getLeftImageWidth()),
     m_height(stereoImage->getLeftImageHeight()),
     m_patchSize(patchSize),
@@ -26,8 +27,54 @@ Matcher::Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, floa
     for (int y = 0; y < m_height; y++) {
         for (int x = 0; x < m_width; x++) {
             i = idx(x, y);
-            m_nearestNeighborField[i] = 0;
-            m_patchDistances[i] = INF;
+            if(m_leftImage[i].has_value()){
+                m_nearestNeighborField[i] = INTMIN;
+                m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
+            }
+        }
+    }
+}
+
+void Matcher::reset() {
+    int i = 0;
+    for (int y = 0; y < m_height; y++) {
+        for (int x = 0; x < m_width; x++) {
+            i = idx(x, y);
+            if(m_leftImage[i].has_value()){
+                m_nearestNeighborField[i] = INTMIN;
+                m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
+            }
+        }
+    }
+}
+
+void Matcher::runOpenCVMatch() {
+    cv::Ptr<cv::StereoBM> bm = cv::StereoBM::create(16*5, m_patchSize);
+    cv::Mat img1(m_height, m_width, CV_8UC1);
+    cv::Mat img2(m_height, m_width, CV_8UC1);
+    cv::Mat disp(m_height, m_width, CV_16SC1);
+
+    for (int col = 0; col < m_width; ++col) {
+        for (int row = 0; row < m_height; ++row) {
+            int idx = row * m_width + col;
+            if(m_leftImage[idx].has_value()){
+                img1.at<unsigned char>(row, col) = 0.299 * m_leftImage[idx].value()[0] +  0.587 * m_leftImage[idx].value()[1] + 0.114 * m_leftImage[idx].value()[2];
+            }
+            if(m_rightImage[idx].has_value()){
+                img2.at<unsigned char>(row, col) = 0.299 * m_rightImage[idx].value()[0] +  0.587 * m_rightImage[idx].value()[1] + 0.114 * m_rightImage[idx].value()[2];
+            }
+        }
+    }
+
+    bm->compute(img1, img2, disp);
+
+    cv::Mat1d easyDisp(disp);
+    for (int row = 0; row < m_height; ++row) {
+        for (int col = 0; col < m_width; ++col) {
+            int idx = row * m_width + col;
+            int disp_ = easyDisp[row][col];
+            //            std::cout << "Disparity at (" << row << ", " << col << "):\t" << disp_ << std::endl;
+            m_nearestNeighborField[idx] = disp_ == -16 ? INTMIN : disp_;
         }
     }
 }
@@ -38,15 +85,18 @@ Matcher::Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, floa
  */
 void Matcher::runPatchMatch(int iterations) {
     for (int i = 0; i < iterations; i++) {
-#pragma omp parallel for
         for (int y = m_patchSize/2; y < m_height-m_patchSize/2; y++) {
+#pragma omp parallel for
             for (int x = m_patchSize/2; x < m_width-m_patchSize/2; x++) {
-                if (i % 2 == 0)
-                    propagate(x, y, 0);
-                else
-                    propagate(x, y, 1);
 
-                randomSearch(x, y);
+                if(m_leftImage[idx(x, y)].has_value()){
+                    if (i % 2 == 0)
+                        propagate(x, y, 0);
+                    else
+                        propagate(x, y, 1);
+
+                    randomSearch(x, y);
+                }
             }
         }
     }
@@ -59,18 +109,18 @@ void Matcher::runPatchMatch(int iterations) {
  */
 void Matcher::randomSearch(int x, int y) {
     int i = idx(x, y);
-    int cutoff = std::max(x-m_searchWindow, 0);
-    float radius = m_alpha * (m_width-m_patchSize);
-
-    while (radius > 1) {
-        int randomOffset = -(std::rand() % (x - cutoff));
-        float dist = patchDistance(x, y, randomOffset);
+    float current_alpha = m_alpha;
+    for(int iterations = 0; iterations < 5; iterations++) {
+        int randomOffset = 1.0 * rand() / RAND_MAX * (m_width-m_patchSize);
+        int clippedOffset = current_alpha * (randomOffset - x) + m_patchSize/2;
+//        std::cout << "Clipped offset " << clippedOffset << " for " << x << std::endl;
+        float dist = patchDistance(x, y, clippedOffset);
         if (dist < m_patchDistances[i]) {
             m_patchDistances[i] = dist;
-            m_nearestNeighborField[i] = -randomOffset;
+            m_nearestNeighborField[i] = clippedOffset;
+//            std::cout << "Found a better one!" << std::endl;
         }
-
-        radius *= m_alpha;
+        current_alpha *= m_alpha;
     }
 }
 
@@ -109,22 +159,25 @@ void Matcher::propagate(int x, int y, int mode) {
 }
 
 /**
- * @brief Matcher::runBlockMatch implements the standard BlockMatch algorithm, but searches only in one direction and only in a certain window.
+ * @brief Matcher::runBlockMatch implements the standard BlockMatch algorithm, but searches in both directions and only in a certain window.
  */
 void Matcher::runBlockMatch()
 {
-#pragma omp parallel for
+#pragma omp parallel for collapse(2)
     for (int y = m_patchSize/2; y < (m_height-m_patchSize/2); y++) {
-        std::cout << "process: " << (y * 100)/m_height << " %" << std::endl;
         for (int x = m_patchSize/2; x < m_width-m_patchSize/2; x++) {
-            int i = idx(x, y);
-            for (int x2 = x; x2 >= std::max(m_patchSize/2, x-m_searchWindow); x2--) {
+            if(!m_leftImage[idx(x, y)].has_value()){
+                continue;
+            }
+#pragma omp parallel for
+            for (int x2 = std::max(m_patchSize/2, x-m_searchWindow); x2 <= std::max(m_width-m_patchSize/2, x+m_searchWindow); x2++) {
+                int i = idx(x, y);
                 int offset = x2 - x;
                 float dist = patchDistance(x, y, offset);
 
                 if (dist < m_patchDistances[i]) {
                     m_patchDistances[i] = dist;
-                    m_nearestNeighborField[i] = -offset;
+                    m_nearestNeighborField[i] = offset;
                 }
             }
         }
@@ -146,8 +199,8 @@ float *Matcher::getDepthMap()
     std::cout << "baseline: " << baseline << std::endl;
 
     for (int i = 0; i < m_width * m_height; i++) {
-        if (m_nearestNeighborField[i] > 0) {
-            z_inPixel = (baseline * focalLength) / m_nearestNeighborField[i];
+        if (m_nearestNeighborField[i] != INTMIN) {
+            z_inPixel = (baseline * focalLength) / abs(m_nearestNeighborField[i]);
             m_depthMap[i] = z_inPixel;
         }
         else {
@@ -173,13 +226,17 @@ float Matcher::patchDistance(int posX, int posY, int offsetX) {
 
     for (int y = -m_patchSize/2; y < m_patchSize/2; y++) {
         for (int x = -m_patchSize/2; x < m_patchSize/2; x++) {
-            if (validPixel(posX + x, posY + y) && validPixel(posX + offsetX + x, posY + y)) {
+            if (validPixel(posX + x, posY + y) && validPixel(posX + offsetX + x, posY + y) &&
+                    m_leftImage[idx(posX + x, posY + y)].has_value() && m_rightImage[idx(posX + x + offsetX, posY + y)].has_value()) {
+
                 color(m_leftImage, posX + x, posY + y, left_color);
                 color(m_rightImage, posX + x + offsetX, posY + y, right_color);
                 result += diff(left_color, right_color);
                 pixelCounter++;
             }
             else {
+                delete(left_color);
+                delete(right_color);
                 return INF;
             }
         }
@@ -200,13 +257,13 @@ bool Matcher::validPixel(int x, int y) {
  * @param y
  * @param c
  */
-void Matcher::color(unsigned char *image, int x, int y, int *c)
+void Matcher::color(std::optional<Pixel> *image, int x, int y, int *c)
 {
-    int i = idx(x, y) * 4;
-    c[0] = (int) image[i];
-    c[1] = (int) image[i+1];
-    c[2] = (int) image[i+2];
-    c[3] = (int) image[i+3];
+    int i = idx(x, y);
+    c[0] = (int) image[i].value()[0];
+    c[1] = (int) image[i].value()[1];
+    c[2] = (int) image[i].value()[2];
+    c[3] = (int) image[i].value()[3];
 }
 
 float Matcher::diff(int *c1, int *c2)
@@ -221,4 +278,8 @@ float Matcher::diff(int *c1, int *c2)
 int Matcher::idx(int x, int y)
 {
     return y * m_width + x;
+}
+
+void Matcher::setPatchSize(int size) {
+    m_patchSize = size;
 }

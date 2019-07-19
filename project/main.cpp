@@ -65,29 +65,66 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-//        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-//        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+        //        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        //        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
         // Patchmatch
-//        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
-//        patchMatch.computeDisparity();
-//        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
-//        testImage.disparityToDepth();
-//        testImage.derectifyDepthMap();
-//        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
+        //        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
+        //        patchMatch.computeDisparity();
+        //        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
+        //        testImage.disparityToDepth();
+        //        testImage.derectifyDepthMap();
+        //        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
 
         // Blockmatch
         // . CURRENTLY ONLY WORK WITH NON-RECTIFIED IMAGES, FOR WHATEVER REASONS
         // . IN BLOCKMATCH, THE LEFT AND RIGHT IMAGES ARE SWITCHED BECAUSE I THINK THE MAIN CODE SWITCHES LEFT AND RIGHT IMAGES ALSO, WE HAVE TO CHANGE THAT.
         int iterations = 5;
-        float alpha = 0.5;
+        float alpha = 0.8;
         int blockSize = 5;
         int searchWindow = width/4;
         Matcher m(&testImage, blockSize, searchWindow, alpha);
-//        m.runPatchMatch(5);
-        m.runBlockMatch();
-        writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./matcher_disparity.png");
-        writeDepthImageRaw(m.getDepthMap(), width, height, "./matcher_depth.png");
+        for (int i = 0; i < 5; ++i) {
+            int bSize = 2 * i + 3;
+            std::string sbSize = std::to_string(bSize);
+
+            m.setPatchSize(bSize);
+
+            if(bSize > 4) {
+                // RUN OPENCV
+                std::cout << "+++++++++++++++" << std::endl;
+                std::cout << "STARTING OPENCV PATCHSIZE " << bSize << std::endl;
+                std::cout << "+++++++++++++++" << std::endl;
+                m.reset();
+                m.runOpenCVMatch();
+                writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./opencv_disparity" + sbSize + ".png");
+                writeDepthImageRaw(m.getDepthMap(), width, height, "./opencv_depth" + sbSize + ".png");
+                writeRawDepthFile("./opencv_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+                writeRawDisparityFile("./opencv_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+            }
+            // RUN PATCHMATCH
+            std::cout << "+++++++++++++++" << std::endl;
+            std::cout << "STARTING PATCHMATCH PATCHSIZE " << bSize << std::endl;
+            std::cout << "+++++++++++++++" << std::endl;
+            m.reset();
+            m.runPatchMatch(iterations);
+            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./patchmatch_disparity" + sbSize + ".png");
+            writeDepthImageRaw(m.getDepthMap(), width, height, "./patchmatch_depth" + sbSize + ".png");
+            writeRawDepthFile("./patchmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+            writeRawDisparityFile("./patchmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+
+            // RUN BLOCKMATCH
+            std::cout << "+++++++++++++++" << std::endl;
+            std::cout << "STARTING BLOCKMATCH PATCHSIZE " << bSize << std::endl;
+            std::cout << "+++++++++++++++" << std::endl;
+            m.reset();
+            m.runBlockMatch();
+            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./blockmatch_disparity" + sbSize + ".png");
+            writeDepthImageRaw(m.getDepthMap(), width, height, "./blockmatch_depth" + sbSize + ".png");
+            writeRawDepthFile("./blockmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+            writeRawDisparityFile("./blockmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+
+        }
 
         // point cloud/ backprojection
         /*

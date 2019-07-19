@@ -354,8 +354,8 @@ public:
         // read in both images as BYTE arrays
 
         FreeImageB leftImage, rightImage;
-        leftImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].first);
-        rightImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].second);
+        rightImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].first);
+        leftImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].second);
 
         // (re)initialize arrays in case needed
         if(!m_arraySet ||

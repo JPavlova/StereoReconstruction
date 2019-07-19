@@ -19,6 +19,10 @@ include_directories(${EIGEN3_INCLUDE_DIR})
 # find_package(FreeImage REQUIRED)
 # include_directories(${FREEIMAGE_INCLUDE_DIRS})
 
+# OpenCV
+find_package(OpenCV REQUIRED)
+include_directories(${OPENCV_INCLUDE_DIRS})
+
 #OpenMP
 find_package(OpenMP)
 include_directories(${OPENMP_INCLUDE_DIRS})
@@ -42,4 +46,4 @@ set(SOURCE_FILES
 
 add_executable(stereo_reconstruction main.cpp ${HEADER_FILES} ${SOURCE_FILES})
 #target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${CERES_LIBRARIES} ${EIGEN_LIBRARIES} libstdc++fs.a)
-target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${EIGEN_LIBRARIES} libstdc++fs.a)
+target_link_libraries(stereo_reconstruction PUBLIC OpenMP::OpenMP_CXX freeimage ${EIGEN_LIBRARIES} ${OpenCV_LIBS} libstdc++fs.a)

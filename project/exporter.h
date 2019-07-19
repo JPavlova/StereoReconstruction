@@ -48,7 +48,7 @@ bool writeRGBImage(BYTE *image, int width, int height, const std::string& filena
     return true;
 }
 
-bool writeDisparityImageRaw(int *depthImage, int width, int height, DEPTH_MODE mode, const std::string& filename) {
+bool writeDisparityImageRaw(int *disparityMap, int width, int height, DEPTH_MODE mode, const std::string& filename) {
     // using freeimage ideally
     FreeImage_Initialise();
     FIBITMAP * bitmap = FreeImage_Allocate(width, height, 24);
@@ -63,8 +63,8 @@ bool writeDisparityImageRaw(int *depthImage, int width, int height, DEPTH_MODE m
     float maximum =MINF;
     float current;
     for (int i = 0; i < width * height; i++) {
-        current = depthImage[i];
-        if ((current != MINF) && (current != INF)){
+        current = abs(disparityMap[i]);
+        if ((current != INTMAX) && (current != INTMIN)){
             if (current > maximum) {
                 maximum = current;
             }
@@ -76,17 +76,26 @@ bool writeDisparityImageRaw(int *depthImage, int width, int height, DEPTH_MODE m
 
     float factor = 0.0f;
     if ((maximum - minimum) > EPSILON) {
-        factor = 1.0f / (maximum - minimum);
+        factor = 255.0f / (maximum - minimum);
     }
+    std::cout << "OUR: " << minimum << ", "<< maximum << ", "<< factor << std::endl;
 
-    int i = 0;
+    int i = 0, col;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             i = (height - h) * width + w;
-            current = depthImage[i];
-            color.rgbRed = (BYTE) current * factor * 255;
-            color.rgbGreen = (BYTE) current * factor * 255;
-            color.rgbBlue = (BYTE) current * factor * 255;
+            if ((disparityMap[i] != INTMAX) && (disparityMap[i] != INTMIN)){
+                col = abs(disparityMap[i]) * factor;
+                col = col % 256;
+                color.rgbRed = (BYTE) col;
+                color.rgbGreen = (BYTE) col;
+                color.rgbBlue = (BYTE) col;
+            }
+            else {
+                color.rgbRed = (BYTE) 255;
+                color.rgbGreen = (BYTE) 0;
+                color.rgbBlue = (BYTE) 0;
+            }
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }
@@ -132,17 +141,27 @@ bool writeDepthImageRaw(float *depthImage, int width, int height, const std::str
 
     float factor = 0.0f;
     if ((maximum - minimum) > EPSILON) {
-        factor = 1.0f / (maximum - minimum);
+        factor = 255.0f / (maximum - minimum);
     }
 
-    int i = 0;
+    int i = 0, col;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            i = (height - h) * width + w; // does this work now?
-            current = depthImage[i];
-            color.rgbRed = (BYTE) (current * factor * 255);
-            color.rgbGreen = (BYTE) (current * factor * 255);
-            color.rgbBlue = (BYTE) (current * factor * 255);
+            i = (height - h) * width + w;
+            col = depthImage[i] * factor;
+            col = col % 256;
+            if ((depthImage[i] != MINF) && (depthImage[i] != INF)){
+                col = depthImage[i] * factor;
+                col = col % 256;
+                color.rgbRed = (BYTE) col;
+                color.rgbGreen = (BYTE) col;
+                color.rgbBlue = (BYTE) col;
+            }
+            else {
+                color.rgbRed = (BYTE) 255;
+                color.rgbGreen = (BYTE) 0;
+                color.rgbBlue = (BYTE) 0;
+            }
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }
@@ -191,15 +210,16 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     }
     std::cout << "maximum: " << maximum << std::endl;
     std::cout << "minimum: " << minimum << std::endl;
-    if (minimum < 0)
-        minimum = 0;
-    if (maximum > max) {
-        maximum = max;
-    }
+//    if (minimum < 0)
+//        minimum = 0;
+//    if (maximum > max) {
+//        maximum = max;
+//    }
 
     float factor = 0.0f;
     if ((maximum - minimum) > 0.000001f) {
-        factor = 1.0f / (maximum - minimum);
+        factor = 255.0f / (maximum - minimum);
+        std::cout << "OUR: " << factor << std::endl;
     }
 
     int i = 0;
@@ -207,14 +227,15 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         for (int w = 0; w < width; w++) {
             i = (height - h) * width + w;
             float current;
-            if(depthImage[i] > max){
-                current = max;
-            } else {
-                current = depthImage[i] - minimum;
-            }
-            color.rgbRed = (BYTE) current * factor * 255;
-            color.rgbGreen = (BYTE) current * factor * 255;
-            color.rgbBlue = (BYTE) current * factor * 255;
+//            if(depthImage[i] > max){
+//                current = max;
+//            } else {
+//                current = depthImage[i] - minimum;
+//            }
+            int col = current * factor;
+            color.rgbRed = (BYTE) col % 256;
+            color.rgbGreen = (BYTE) col % 256;
+            color.rgbBlue = (BYTE) col % 256;
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }
@@ -225,6 +246,30 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     FreeImage_DeInitialise();
 
     return true;
+}
+
+void writeRawDepthFile(std::string filename, float* depthMap, int width, int height) {
+    std::ofstream myfile;
+        myfile.open(filename);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                myfile << depthMap[row*width+col] << "\t";
+            }
+            myfile << "\n";
+        }
+        myfile.close();
+}
+
+void writeRawDisparityFile(std::string filename, int* depthMap, int width, int height) {
+    std::ofstream myfile;
+        myfile.open(filename);
+        for (int row = 0; row < height; row++) {
+            for (int col = 0; col < width; col++) {
+                myfile << depthMap[row*width+col] << "\t";
+            }
+            myfile << "\n";
+        }
+        myfile.close();
 }
 
 // code mostly copied from my homework assignment

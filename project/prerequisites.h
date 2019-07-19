@@ -12,6 +12,12 @@
 #ifndef INF
 #define INF std::numeric_limits<float>::infinity()
 #endif
+#ifndef INTMIN
+#define INTMIN -std::numeric_limits<int>::infinity()
+#endif
+#ifndef INTMAX
+#define INTMAX std::numeric_limits<int>::infinity()
+#endif
 #ifndef EPSILON
 #define EPSILON 0.000001
 #endif
