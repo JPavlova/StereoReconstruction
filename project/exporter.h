@@ -64,7 +64,7 @@ bool writeDisparityImageRaw(int *disparityMap, int width, int height, DEPTH_MODE
     float current;
     for (int i = 0; i < width * height; i++) {
         current = abs(disparityMap[i]);
-        if ((current != INTMAX) && (current != INTMIN)){
+        if ((current != INT_MAX) && (current != INT_MIN)){
             if (current > maximum) {
                 maximum = current;
             }
@@ -78,13 +78,13 @@ bool writeDisparityImageRaw(int *disparityMap, int width, int height, DEPTH_MODE
     if ((maximum - minimum) > EPSILON) {
         factor = 255.0f / (maximum - minimum);
     }
-    std::cout << "OUR: " << minimum << ", "<< maximum << ", "<< factor << std::endl;
+    std::cout << "Min | Max | Factor: " << minimum << ", "<< maximum << ", "<< factor << std::endl;
 
     int i = 0, col;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
             i = (height - h) * width + w;
-            if ((disparityMap[i] != INTMAX) && (disparityMap[i] != INTMIN)){
+            if ((disparityMap[i] != INT_MAX) && (disparityMap[i] != INT_MIN)){
                 col = abs(disparityMap[i]) * factor;
                 col = col % 256;
                 color.rgbRed = (BYTE) col;

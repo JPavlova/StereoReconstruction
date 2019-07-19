@@ -1,6 +1,6 @@
 #include "matcher.h"
 
-#define MIN_OVERLAP 0.2f
+#define MIN_OVERLAP 0.01f
 
 /**
  * @brief Matcher::Matcher this class encapsulates both matching methods we are considering: BlockMatch and PatchMatch.
@@ -20,6 +20,7 @@ Matcher::Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, floa
     m_alpha(alpha)
 {
     m_nearestNeighborField = new int[m_width * m_height]();
+    m_matchIndex = new int[m_width * m_height]();
     m_patchDistances = new float[m_width * m_height]();
     m_depthMap = new float[m_width * m_height]();
 
@@ -27,10 +28,9 @@ Matcher::Matcher(StereoImage *stereoImage, int patchSize, int searchWindow, floa
     for (int y = 0; y < m_height; y++) {
         for (int x = 0; x < m_width; x++) {
             i = idx(x, y);
-            if(m_leftImage[i].has_value()){
-                m_nearestNeighborField[i] = INTMIN;
-                m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
-            }
+            m_nearestNeighborField[i] = INT_MIN;
+            m_matchIndex[i] = INT_MIN;
+            m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
         }
     }
 }
@@ -40,10 +40,9 @@ void Matcher::reset() {
     for (int y = 0; y < m_height; y++) {
         for (int x = 0; x < m_width; x++) {
             i = idx(x, y);
-            if(m_leftImage[i].has_value()){
-                m_nearestNeighborField[i] = INTMIN;
-                m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
-            }
+            m_nearestNeighborField[i] = INT_MIN;
+            m_matchIndex[i] = INT_MIN;
+            m_patchDistances[i] = 255.f*4.f*(float)m_patchSize*(float)m_patchSize*MIN_OVERLAP;
         }
     }
 }
@@ -74,7 +73,7 @@ void Matcher::runOpenCVMatch() {
             int idx = row * m_width + col;
             int disp_ = easyDisp[row][col];
             //            std::cout << "Disparity at (" << row << ", " << col << "):\t" << disp_ << std::endl;
-            m_nearestNeighborField[idx] = disp_ == -16 ? INTMIN : disp_;
+            m_nearestNeighborField[idx] = disp_ == -16 ? INT_MIN : disp_;
         }
     }
 }
@@ -113,12 +112,13 @@ void Matcher::randomSearch(int x, int y) {
     for(int iterations = 0; iterations < 5; iterations++) {
         int randomOffset = 1.0 * rand() / RAND_MAX * (m_width-m_patchSize);
         int clippedOffset = current_alpha * (randomOffset - x) + m_patchSize/2;
-//        std::cout << "Clipped offset " << clippedOffset << " for " << x << std::endl;
+        //        std::cout << "Clipped offset " << clippedOffset << " for " << x << std::endl;
         float dist = patchDistance(x, y, clippedOffset);
         if (dist < m_patchDistances[i]) {
             m_patchDistances[i] = dist;
             m_nearestNeighborField[i] = clippedOffset;
-//            std::cout << "Found a better one!" << std::endl;
+            m_matchIndex[i] = i + clippedOffset;
+            //            std::cout << "Found a better one!" << std::endl;
         }
         current_alpha *= m_alpha;
     }
@@ -178,6 +178,7 @@ void Matcher::runBlockMatch()
                 if (dist < m_patchDistances[i]) {
                     m_patchDistances[i] = dist;
                     m_nearestNeighborField[i] = offset;
+                    m_matchIndex[i] = i + offset;
                 }
             }
         }
@@ -199,12 +200,23 @@ float *Matcher::getDepthMap()
     std::cout << "baseline: " << baseline << std::endl;
 
     for (int i = 0; i < m_width * m_height; i++) {
-        if (m_nearestNeighborField[i] != INTMIN) {
+        if (m_nearestNeighborField[i] == INT_MIN && m_matchIndex[i] == INT_MIN) {
+            m_depthMap[i] = MINF;
+        }
+        else if (m_matchIndex[i] == INT_MIN){
             z_inPixel = (baseline * focalLength) / abs(m_nearestNeighborField[i]);
             m_depthMap[i] = z_inPixel;
         }
         else {
-            m_depthMap[i] = MINF;
+            int uL = i % m_width - m_width/2;
+            int uR = m_width/2 - m_matchIndex[i] % m_width;
+            if (uL + uR == 0) {
+                m_depthMap[i] = MINF;
+                continue;
+            }
+            result = (baseline * focalLength) / (float)(uL + uR);
+            m_depthMap[i] = result;
+            //            std::cout << "UL: " << uL << ", UR: " << uR << " (compared to disparity: " << m_nearestNeighborField[i] << ") --> Z: " << m_depthMap[i] << std::endl;
         }
     }
 

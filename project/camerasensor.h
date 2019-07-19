@@ -46,21 +46,22 @@ public:
 
         /*
          * from here on: recycle-bin data set
-         *
-        m_leftIntrinsics << 2945.377f, 0.f, 1284.862f,
-                0.0f, 2945.377f, 954.52f,
-                0.0f, 0.0f, 1.f;
-        m_leftExtrinsics.setIdentity();
+         */
+        //        m_focalLength = 2945.377f;
+        //        m_baseline = 178.232f;
+        //        m_leftIntrinsics << 2945.377f, 0.f, 1284.862f,
+        //                0.0f, 2945.377f, 954.52f,
+        //                0.0f, 0.0f, 1.f;
+        //        m_leftExtrinsics.setIdentity();
 
-        m_rightIntrinsics << 2945.377f, 0.0f, 1455.543f,
-                0.0f, 2945.377f, 954.52f,
-                0.0f, 0.0f, 1.0f;
+        //        m_rightIntrinsics << 2945.377f, 0.0f, 1455.543f,
+        //                0.0f, 2945.377f, 954.52f,
+        //                0.0f, 0.0f, 1.0f;
 
-        m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 178.232f, // translated along x axis by 178.232mm, or maybe doffs= 170.681?
-                0.0f, 1.f, 0.0f, 0.0f,
-                -0.7071f, 0.0f, 0.7071f, 0.0f,
-                0.0f, 0.0f, 0.0f, 1.0f;
-        */
+        //        m_rightExtrinsics <<    1.f, 0.0f, 0.0f, 178.232f, // translated along x axis by 178.232mm, or maybe doffs= 170.681?
+        //                0.0f, 1.f, 0.0f, 0.0f,
+        //                0.0f, 0.0f, 1.0f, 0.0f,
+        //                0.0f, 0.0f, 0.0f, 1.0f;
 
         /*
          * from here on: blender data set
@@ -68,7 +69,6 @@ public:
 
         m_focalLength = 700.0f;
         m_baseline = 2000.0f;
-        m_doffs = 2000.0f; // dont think we need this for blender data
 
         // width/height needed for homographies
         m_leftImageWidth = 640;
@@ -86,33 +86,30 @@ public:
 
         m_leftExtrinsics.setIdentity();
 
-        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                0.0f, 0.0f, 1.0f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
+        //        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
+        //                                0.0f, 1.0f, 0.0f, 0.0f,
+        //                                0.0f, 0.0f, 1.0f, 0.0f,
+        //                                0.0f, 0.0f, 0.0f, 1.0f;
         /*
          * ( cos 0 sin)
          * ( 0   1 0  )
          * (-sin 0 cos)
          *
          * more rotations:
+         * */
 
-
-        m_rightExtrinsics <<    0.999f, 0.0f, 0.035f, 100.0f, // 2 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                -0.035f, 0.0f, 0.999f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
-
+        //        m_rightExtrinsics <<    0.999f, 0.0f, 0.035f, 100.0f, // 2 degree of rotation
+        //                                0.0f, 1.0f, 0.0f, 0.0f,
+        //                                -0.035f, 0.0f, 0.999f, 0.0f,
+        //                                0.0f, 0.0f, 0.0f, 1.0f;
         m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
                                 0.0f, 1.0f, 0.0f, 0.0f,
                                 -0.259f, 0.0f, 0.966f, 0.0f,
                                 0.0f, 0.0f, 0.0f, 1.0f;
-
-        m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 100.0f, // 45 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                -0.7071f, 0.0f, 0.7071f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
-        */
+        //        m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 100.0f, // 45 degree of rotation
+        //                                0.0f, 1.0f, 0.0f, 0.0f,
+        //                                -0.7071f, 0.0f, 0.7071f, 0.0f,
+        //                                0.0f, 0.0f, 0.0f, 1.0f;
 
         // set index to start with
         m_arraySet = false;
@@ -228,10 +225,10 @@ public:
                 F(0,2) - w_.x()*F(2,2), abs(F(1,2) - w_.y()*F(2,2)), v_.z(),
                 0, 0, 1;
         /*
-        Hr_ <<  F(1,2) - w_.y()*F(2,2), w_.x()*F(2,2) - F(0,2), 0,
-                F(0,2) - w_.x()*F(2,2), F(1,2) - w_.y()*F(2,2), v_.z(),
-                0, 0, 1;
-        */
+            Hr_ <<  F(1,2) - w_.y()*F(2,2), w_.x()*F(2,2) - F(0,2), 0,
+                    F(0,2) - w_.x()*F(2,2), F(1,2) - w_.y()*F(2,2), v_.z(),
+                    0, 0, 1;
+            */
 
         m_H << Hr * Hp;
         m_H_ << Hr_ * Hp_;

@@ -46,7 +46,7 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-    //std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
+//    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
     std::string dataDir = "../project/data/blender";
     CameraSensor sensor;
 
@@ -65,20 +65,9 @@ int main(int argc, char *argv[])
 
         // Rectify
         testImage.rectify();
-        //        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-        //        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
+        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
+        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
-        // Patchmatch
-        //        PatchMatch patchMatch(&testImage,width,height,PATCH_SIZE);
-        //        patchMatch.computeDisparity();
-        //        writeDepthImage(testImage.getDisparity(), width, height, DEPTH_MODE::GRAY, "./disparity.png", 640.f);
-        //        testImage.disparityToDepth();
-        //        testImage.derectifyDepthMap();
-        //        writeDepthImage(testImage.getRectifiedDepthImage(), width, height, DEPTH_MODE::GRAY, "./depth.png", 10000.f);
-
-        // Blockmatch
-        // . CURRENTLY ONLY WORK WITH NON-RECTIFIED IMAGES, FOR WHATEVER REASONS
-        // . IN BLOCKMATCH, THE LEFT AND RIGHT IMAGES ARE SWITCHED BECAUSE I THINK THE MAIN CODE SWITCHES LEFT AND RIGHT IMAGES ALSO, WE HAVE TO CHANGE THAT.
         int iterations = 5;
         float alpha = 0.8;
         int blockSize = 5;

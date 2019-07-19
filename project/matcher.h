@@ -41,7 +41,7 @@ private:
     StereoImage *m_stereoImage;
     std::optional<Pixel> *m_leftImage, *m_rightImage;
 
-    int *m_nearestNeighborField;
+    int *m_nearestNeighborField, *m_matchIndex;
     float *m_patchDistances;
     float *m_depthMap;
 };
