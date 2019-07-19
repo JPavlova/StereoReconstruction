@@ -57,12 +57,7 @@ bool StereoImage::backproject_frame(Vertex *vertices)
     Pixel *colorMap = m_leftImage;
     float *depthMap = m_depthImage;
 
-    Matrix3f leftIntrinsics = sensor->getLeftIntrinsics();
     Matrix3f leftIntrinsicsInv = sensor->getLeftIntrinsics().inverse();
-    float fovX = leftIntrinsics(0, 0);
-    float fovY = leftIntrinsics(1, 1);
-    float cX = leftIntrinsics(0, 2);
-    float cY = leftIntrinsics(1, 2);
 
 #pragma omp parallel for
     for (int v = 0; v < sensor->getLeftImageHeight(); v++) {
