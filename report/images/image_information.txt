@@ -1,0 +1,2 @@
+DEPTH SCALE:
+    . in GIMP: open "Colors"->"Brighness-Contrast" and set both values to 120 for better visibility.
