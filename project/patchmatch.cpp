@@ -106,7 +106,7 @@ void PatchMatch::propagate(int idx, int iteration)
         //consider left neighbor for odd iterations
         int idx_propagated = even ? m_matches[idx + 1] : m_matches[idx -1];
 
-        if(idx_propagated != MATCH_INVALID && idx_propagated > idx){
+        if(idx_propagated != MATCH_INVALID && idx_propagated < idx){
 
             int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
 
@@ -122,7 +122,7 @@ void PatchMatch::propagate(int idx, int iteration)
         //consider bottom neighbor for odd iterations
         int idx_propagated = even ? m_matches[idx + m_width] - m_width : m_matches[idx - m_width] + m_width;
 
-        if(idx_propagated != MATCH_INVALID && idx_propagated > idx){
+        if(idx_propagated != MATCH_INVALID && idx_propagated < idx){
 
             int neighborhood_propagated = evalNeighborhood(idx, idx_propagated);
 
