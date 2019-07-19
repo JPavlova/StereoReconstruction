@@ -59,8 +59,8 @@ int main(int argc, char *argv[])
          * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
          * */
 
-        std::string object = "toys";
-        std::string dataDir = "../project/data/blender";
+        std::string object = "flower";
+        std::string dataDir = "../project/data/perfect";
         std::regex regex (".*im[0-9]_" + object + ".png");
 
         CameraSensor sensor;

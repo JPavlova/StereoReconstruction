@@ -1,0 +1,4 @@
+focalLength = 700.0f;
+baseline = 2000.0f;
+width = 640;
+height = 480;

@@ -1,0 +1,5 @@
+focalLength = 700.0f;
+baseline = 2000.0f;
+width = 640;
+height = 480;
+extrinsics = [0.999f, 0.0f, 0.035f, 100.0f; 0.0f, 1.0f, 0.0f, 0.0f; -0.035f, 0.0f, 0.999f, 0.0f; 0.0f, 0.0f, 0.0f, 1.0f]
