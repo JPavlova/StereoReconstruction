@@ -46,14 +46,29 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-//    std::string dataDir = "../project/data/Recycle-perfect/Recycle-perfect";
-    std::string dataDir = "../project/data/blender";
-    CameraSensor sensor;
+        /*
+         * CALIBRATION DATA SETUP:
+         *
+         * focalLength = *.*
+         * baseline = *.*
+         * width = *
+         * height = *
+         *
+         * optional: extrinsic as transformation between left-right
+         *
+         * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
+         * */
 
-    if(!sensor.Init(dataDir)) {
-        std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
-        return -1;
-    }
+        std::string object = "toys";
+        std::string dataDir = "../project/data/blender";
+        std::regex regex (".*im[0-9]_" + object + ".png");
+
+        CameraSensor sensor;
+
+        if(!sensor.Init(dataDir, regex, object)) {
+            std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
+            return -1;
+        }
 
     // Sensor loop over all frames
     while(sensor.ProcessNextFrame()) {

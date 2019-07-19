@@ -204,7 +204,7 @@ float *Matcher::getDepthMap()
             m_depthMap[i] = MINF;
         }
         else if (m_matchIndex[i] == INT_MIN){
-            z_inPixel = (baseline * focalLength) / abs(m_nearestNeighborField[i]);
+            z_inPixel = (baseline * focalLength) / m_nearestNeighborField[i];
             m_depthMap[i] = z_inPixel;
         }
         else {

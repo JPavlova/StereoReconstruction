@@ -19,7 +19,6 @@ typedef unsigned char BYTE;
 
 // Filesystem namespace as abbreveation
 namespace fs = std::experimental::filesystem;
-const std::regex IMAGE_NAME_REGEX (".*imc[0-9].png");
 
 using namespace Eigen;
 
@@ -39,77 +38,46 @@ public:
      * @param datasetDir : path to image-directory
      * @return false if initialization wasn't possible
      */
-    bool Init(const std::string& datasetDir) {
+    bool Init(const std::string& datasetDir, std::regex regex, std::string object) {
 
         m_dataDir = datasetDir;
-        if (!pushImageNamesToVector()) return false;
+        if (!pushImageNamesToVector(regex)) return false;
 
         /*
-         * from here on: recycle-bin data set
-         */
-        //        m_focalLength = 2945.377f;
-        //        m_baseline = 178.232f;
-        //        m_leftIntrinsics << 2945.377f, 0.f, 1284.862f,
-        //                0.0f, 2945.377f, 954.52f,
-        //                0.0f, 0.0f, 1.f;
-        //        m_leftExtrinsics.setIdentity();
+                 * AUTOMATICALLY ADJUSTED FOR DATASET
+                 * */
 
-        //        m_rightIntrinsics << 2945.377f, 0.0f, 1455.543f,
-        //                0.0f, 2945.377f, 954.52f,
-        //                0.0f, 0.0f, 1.0f;
+        calibrationData calib = readCalibration(m_dataDir + "/calib_" + object + ".txt");
 
-        //        m_rightExtrinsics <<    1.f, 0.0f, 0.0f, 178.232f, // translated along x axis by 178.232mm, or maybe doffs= 170.681?
-        //                0.0f, 1.f, 0.0f, 0.0f,
-        //                0.0f, 0.0f, 1.0f, 0.0f,
-        //                0.0f, 0.0f, 0.0f, 1.0f;
-
-        /*
-         * from here on: blender data set
-         * */
-
-        m_focalLength = 700.0f;
-        m_baseline = 2000.0f;
+        m_focalLength = calib.focalLength;
+        m_baseline = calib.baseline;
 
         // width/height needed for homographies
-        m_leftImageWidth = 640;
-        m_leftImageHeight = 480;
-        m_rightImageWidth = 640;
-        m_rightImageHeight = 480;
+        m_leftImageWidth = calib.width;
+        m_leftImageHeight = calib.height;
+        m_rightImageWidth = calib.width;
+        m_rightImageHeight = calib.height;
 
         m_leftIntrinsics << m_focalLength, 0.f, m_leftImageWidth/2,
-                            0.0f, m_focalLength, m_leftImageHeight/2,
-                            0.0f, 0.0f, 1.0f;
+                0.0f, m_focalLength, m_leftImageHeight/2,
+                0.0f, 0.0f, 1.0f;
 
         m_rightIntrinsics << m_focalLength, 0.f, m_rightImageWidth/2,
-                             0.0f, m_focalLength, m_rightImageHeight/2,
-                             0.0f, 0.0f, 1.0f;
+                0.0f, m_focalLength, m_rightImageHeight/2,
+                0.0f, 0.0f, 1.0f;
 
         m_leftExtrinsics.setIdentity();
 
-        //        m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
-        //                                0.0f, 1.0f, 0.0f, 0.0f,
-        //                                0.0f, 0.0f, 1.0f, 0.0f,
-        //                                0.0f, 0.0f, 0.0f, 1.0f;
-        /*
-         * ( cos 0 sin)
-         * ( 0   1 0  )
-         * (-sin 0 cos)
-         *
-         * more rotations:
-         * */
-
-        //        m_rightExtrinsics <<    0.999f, 0.0f, 0.035f, 100.0f, // 2 degree of rotation
-        //                                0.0f, 1.0f, 0.0f, 0.0f,
-        //                                -0.035f, 0.0f, 0.999f, 0.0f,
-        //                                0.0f, 0.0f, 0.0f, 1.0f;
-        m_rightExtrinsics <<    0.966f, 0.0f, 0.259f, 100.0f, // 15 degree of rotation
-                                0.0f, 1.0f, 0.0f, 0.0f,
-                                -0.259f, 0.0f, 0.966f, 0.0f,
-                                0.0f, 0.0f, 0.0f, 1.0f;
-        //        m_rightExtrinsics <<    0.7071f, 0.0f, 0.7071f, 100.0f, // 45 degree of rotation
-        //                                0.0f, 1.0f, 0.0f, 0.0f,
-        //                                -0.7071f, 0.0f, 0.7071f, 0.0f,
-        //                                0.0f, 0.0f, 0.0f, 1.0f;
+        // extrinsic not given in calib data
+        if((calib.rightExtrinsic - m_leftExtrinsics).sum() == 0) {
+            m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
+                    0.0f, 1.0f, 0.0f, 0.0f,
+                    0.0f, 0.0f, 1.0f, 0.0f,
+                    0.0f, 0.0f, 0.0f, 1.0f;
+        }
+        else {
+            m_rightExtrinsics = calib.rightExtrinsic;
+        }
 
         // set index to start with
         m_arraySet = false;
@@ -225,16 +193,14 @@ public:
                 F(0,2) - w_.x()*F(2,2), abs(F(1,2) - w_.y()*F(2,2)), v_.z(),
                 0, 0, 1;
         /*
-            Hr_ <<  F(1,2) - w_.y()*F(2,2), w_.x()*F(2,2) - F(0,2), 0,
-                    F(0,2) - w_.x()*F(2,2), F(1,2) - w_.y()*F(2,2), v_.z(),
-                    0, 0, 1;
-            */
+        Hr_ <<  F(1,2) - w_.y()*F(2,2), w_.x()*F(2,2) - F(0,2), 0,
+                F(0,2) - w_.x()*F(2,2), F(1,2) - w_.y()*F(2,2), v_.z(),
+                0, 0, 1;
+        */
 
-        m_H << Hr * Hp;
-        m_H_ << Hr_ * Hp_;
+        m_H_ << Hr * Hp;
+        m_H << Hr_ * Hp_;
         m_S = determineScaleMatrix();
-
-        return true;
     }
 
     /**
@@ -302,7 +268,7 @@ public:
      * create vector of two image name pairs, traverses filesystem and compares image names to regex
      * @return false if no images found, else true
      */
-    bool pushImageNamesToVector() {
+    bool pushImageNamesToVector(std::regex regex) {
         bool pair = false;
         std::string temp_imageName;
         int samples = 0;
@@ -316,7 +282,7 @@ public:
             // std::cout << "File name:\t" << imageName << std::endl;
 
             // Check for correct image names - compare to const REGEX at file start
-            if(std::regex_match(imageName, IMAGE_NAME_REGEX)) {
+            if(std::regex_match(imageName, regex)) {
 
                 // Helper to group every 2 consecutive images to pairs
                 // --> in case of better database should be able to make this better
