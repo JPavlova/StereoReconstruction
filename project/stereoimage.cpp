@@ -71,18 +71,18 @@ bool StereoImage::backproject_frame(Vertex *vertices)
             int i = v * sensor->getLeftImageWidth() + u;
             float w = depthMap[i];
 
-            if (w == MINF) {
+            if (w == MINF || w == INF) {
                 vertices[i].position = Vector4f(MINF, MINF, MINF, MINF);
                 vertices[i].color = Pixel(0, 0, 0, 0);
             }
             else {
-                Vector3f uvw = Vector3f(u*w, v*w, w);
-                Vector3f xyz = leftIntrinsicsInv* uvw; // already in world coordinates, no need for extrinsics-mult.
+                Vector3f p_image = Vector3f(u * w, v * w, w);
+                Vector3f p_camera = leftIntrinsicsInv * p_image; // already in world coordinates, no need for extrinsics-mult.
 
                 // color retrieval
                 Pixel rgb = colorMap[i];
 
-                vertices[i].position = Vector4f(xyz.x(), xyz.y(), xyz.z(), 1);
+                vertices[i].position = Vector4f(p_camera.x(), p_camera.y(), p_camera.z(), 1);
                 vertices[i].color = rgb;
             }
         }
@@ -223,7 +223,11 @@ void StereoImage::disparityToDepth()
 #pragma omp parallel for
     for(int i = 0; i< m_leftImageWidth * m_leftImageHeight; i++)
     {
-        m_depthImageRectified[i] = baseline * focalLength / m_disparity[i];
+        if(m_disparity[i] == 0 || m_disparity[i] == MINF){
+            m_depthImageRectified[i] = MINF;
+        } else {
+            m_depthImageRectified[i] = baseline * focalLength / m_disparity[i];
+        }
     }
 }
 

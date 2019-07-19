@@ -246,12 +246,22 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
 // code mostly copied from my homework assignment
 bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const std::string& filename) {
 
-    int nVertices = width * height;
-    int *indices = new int[height * width];
+    int nVertices = 0;
+    int *meshIndices = new int[width * height];
 
     std::vector<Vector3i> faces;
 
+    for(int i = 0; i < width * height; i++){
+        if(vertices[i].position[0] != MINF){
+            meshIndices[i] = nVertices;
+            nVertices++;
+        } else {
+            meshIndices[i] = -1;
+        }
+    }
+
     for (int y = 0; y < height-1; y++) {
+
         for (int x = 0; x < width-1; x++) {
 
             int origin = computeIndex(x, y, width);
@@ -259,16 +269,18 @@ bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const 
             int bottom = computeIndex(x, y + 1, width);
 
             if(triangleValid(vertices[origin].position, vertices[right].position, vertices[bottom].position)){
-                faces.push_back(Vector3i(origin, bottom, right));
+                faces.push_back(Vector3i(meshIndices[origin], meshIndices[bottom], meshIndices[right]));
             }
         }
+
         for(int x = 1; x < width; x++){
+
             int origin = computeIndex(x, y, width);
             int bottomLeft = computeIndex(x -1, y + 1, width);
             int bottom = computeIndex(x, y + 1, width);
 
             if(triangleValid(vertices[origin].position, vertices[bottomLeft].position, vertices[bottom].position)){
-                faces.push_back(Vector3i(origin, bottomLeft, bottom));
+                faces.push_back(Vector3i(meshIndices[origin], meshIndices[bottomLeft], meshIndices[bottom]));
             }
         }
     }
@@ -283,16 +295,18 @@ bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const 
     outFile << "COFF" << std::endl;
     outFile << nVertices << " " << nFaces << " 0" << std::endl;
 
-    for(int i = 0; i < nVertices; i++){
-        if(vertices[i].position[0] == MINF){
-            outFile << "0 0 0 0 0 0 0" << std::endl;
-        } else {
+    for(int i = 0; i < width * height; i++){
+
+        if(meshIndices[i] != -1) {
+
             for(int j = 0; j < 3; j++){
                 outFile << vertices[i].position[j] << " ";
             }
+
             for(int j = 0; j < 4; j++){
                 outFile << (int) (vertices[i].color[j]) << " ";
             }
+
             outFile << std::endl;
         }
     }
@@ -316,7 +330,7 @@ float distance(Vector4f u, Vector4f v){
 }
 
 bool triangleValid(Vector4f u, Vector4f v, Vector4f w){
-    float edgeThreshold = 1e5;
+    float edgeThreshold = 1e3;
     return u[0] != MINF && v[0] != MINF && w[0] != MINF &&
             distance(u,v) < edgeThreshold && distance(u,w) < edgeThreshold && distance(v,w) < edgeThreshold;
 }
