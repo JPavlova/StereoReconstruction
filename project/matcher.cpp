@@ -1,6 +1,6 @@
 #include "matcher.h"
 
-#define MIN_OVERLAP 0.01f
+#define MIN_OVERLAP 0.2f
 
 /**
  * @brief Matcher::Matcher this class encapsulates both matching methods we are considering: BlockMatch and PatchMatch.
@@ -203,21 +203,15 @@ float *Matcher::getDepthMap()
         if (m_nearestNeighborField[i] == INT_MIN && m_matchIndex[i] == INT_MIN) {
             m_depthMap[i] = MINF;
         }
-        else if (m_matchIndex[i] == INT_MIN){
-            z_inPixel = (baseline * focalLength) / m_nearestNeighborField[i];
-            m_depthMap[i] = z_inPixel;
-        }
         else {
-            int uL = i % m_width - m_width/2;
-            int uR = m_width/2 - m_matchIndex[i] % m_width;
-            if (uL + uR == 0) {
-                m_depthMap[i] = MINF;
-                continue;
-            }
-            result = (baseline * focalLength) / (float)(uL + uR);
+            result = (baseline * focalLength) / (float)abs(m_nearestNeighborField[i]);
             m_depthMap[i] = result;
             //            std::cout << "UL: " << uL << ", UR: " << uR << " (compared to disparity: " << m_nearestNeighborField[i] << ") --> Z: " << m_depthMap[i] << std::endl;
         }
+//        else if (m_matchIndex[i] == INT_MIN){
+//            z_inPixel = (baseline * focalLength) / m_nearestNeighborField[i];
+//            m_depthMap[i] = z_inPixel;
+//        }
     }
 
     return m_depthMap;

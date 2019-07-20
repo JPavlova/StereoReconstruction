@@ -44,19 +44,15 @@ public:
         if (!pushImageNamesToVector(regex)) return false;
 
         /*
-                 * AUTOMATICALLY ADJUSTED FOR DATASET
-                 * */
+        * AUTOMATICALLY ADJUSTED FOR DATASET
+        * */
 
         calibrationData calib = readCalibration(m_dataDir + "/calib_" + object + ".txt");
 
         m_focalLength = calib.focalLength;
         m_baseline = calib.baseline;
 
-        // width/height needed for homographies
-        m_leftImageWidth = calib.width;
-        m_leftImageHeight = calib.height;
-        m_rightImageWidth = calib.width;
-        m_rightImageHeight = calib.height;
+        // width/height needed for homographies is set when frame is read in
 
         m_leftIntrinsics << m_focalLength, 0.f, m_leftImageWidth/2,
                 0.0f, m_focalLength, m_leftImageHeight/2,
@@ -66,10 +62,9 @@ public:
                 0.0f, m_focalLength, m_rightImageHeight/2,
                 0.0f, 0.0f, 1.0f;
 
-        m_leftExtrinsics.setIdentity();
 
         // extrinsic not given in calib data
-        if((calib.rightExtrinsic - m_leftExtrinsics).sum() == 0) {
+        if(!calib.extrinsicSet) {
             m_rightExtrinsics <<    1.0f, 0.0f, 0.0f, m_baseline, // 0 degree of rotation
                     0.0f, 1.0f, 0.0f, 0.0f,
                     0.0f, 0.0f, 1.0f, 0.0f,
@@ -78,6 +73,18 @@ public:
         else {
             m_rightExtrinsics = calib.rightExtrinsic;
         }
+
+        if(!calib.LeftExtrinsicSet) {
+            m_leftExtrinsics.setIdentity();
+        }
+        else {
+            Matrix4f transform = m_rightExtrinsics * calib.leftExtrinsic.inverse();
+            m_leftExtrinsics.setIdentity();
+            m_rightExtrinsics = transform;
+            std::cout << "ESTIMATED TRANSFORM BETWEEN LEFT/RIGHT:\n" << m_rightExtrinsics << "\n\n" << std::endl;
+        }
+
+
 
         // set index to start with
         m_arraySet = false;
@@ -108,7 +115,8 @@ public:
         Matrix3f id;
         id.setIdentity();
 
-        if(3.f - R.trace() < EPSILON) {
+        // Special case of NO rotation between frames (slides internet)
+        if((R - id).sum() < EPSILON) {
             m_H.setIdentity();
             m_H_.setIdentity();
             m_S.setIdentity();
@@ -118,7 +126,6 @@ public:
         Matrix3f T_hat = hat(T);
         Matrix3f F = K.inverse().transpose() * T_hat * R * K.inverse();
         Vector3f e = K * R.transpose() * T;
-        // TODO: Implement special case of NO rotation between frames (slides internet)
 
         // estimation of z
         // left frame
@@ -279,7 +286,7 @@ public:
             std::string imageName = file.path();
 
             /// Uncomment for file system debugging
-            // std::cout << "File name:\t" << imageName << std::endl;
+//             std::cout << "File name:\t" << imageName << std::endl;
 
             // Check for correct image names - compare to const REGEX at file start
             if(std::regex_match(imageName, regex)) {
@@ -312,13 +319,13 @@ public:
 
         if ((unsigned int)m_currentIdx >= (unsigned int)m_imagePairNameVector.size()) return false;
 
-        std::cout << "ProcessNextFrame [" << m_currentIdx << " | " << m_imagePairNameVector.size() << "]" << std::endl;
+        std::cout << "ProcessNextFrame [" << m_currentIdx + 1 << " | " << m_imagePairNameVector.size() << "]\n" << std::endl;
 
         // read in both images as BYTE arrays
-
         FreeImageB leftImage, rightImage;
         rightImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].first);
         leftImage.LoadImageFromFile(m_imagePairNameVector[m_currentIdx].second);
+        std::cout << "LOADED:\n\t" <<  m_imagePairNameVector[m_currentIdx].first << "\n\t" << m_imagePairNameVector[m_currentIdx].second << "\n" << std::endl;
 
         // (re)initialize arrays in case needed
         if(!m_arraySet ||

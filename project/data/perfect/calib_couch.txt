@@ -1,6 +1,2 @@
 m_focalLength = 7193.133f;
 m_baseline = 380.062f;
-width = 2300;
-height = 1992;
-m_rightImageWidth = 2300;
-m_rightImageHeight = 1992;

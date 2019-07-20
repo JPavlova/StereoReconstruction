@@ -1,4 +1,2 @@
 focalLength = 4161.221
 baseline = 176.252
-width = 2880
-height = 1988

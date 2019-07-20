@@ -1,4 +1,2 @@
 m_focalLength = 2329.558f;
 m_baseline = 193.006f;
-width = 2724;
-height = 1848;

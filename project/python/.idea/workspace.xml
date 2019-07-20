@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="d431cf80-b0aa-441d-ac80-80ea441a84b6" name="Default Changelist" comment="" />
+    <list default="true" id="d431cf80-b0aa-441d-ac80-80ea441a84b6" name="Default Changelist" comment="">
+      <change beforePath="$PROJECT_DIR$/../camerasensor.h" beforeDir="false" afterPath="$PROJECT_DIR$/../camerasensor.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/blender/calib_classroom15deg.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/blender/calib_classroom2deg.txt" beforeDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/perfect/calib_air.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../data/perfect/calib_air.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/perfect/calib_couch.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../data/perfect/calib_couch.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/perfect/calib_flower.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../data/perfect/calib_flower.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/perfect/calib_play.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../data/perfect/calib_play.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../data/perfect/calib_tonne.txt" beforeDir="false" afterPath="$PROJECT_DIR$/../data/perfect/calib_tonne.txt" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../main.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../matcher.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/../matcher.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../prerequisites.h" beforeDir="false" afterPath="$PROJECT_DIR$/../prerequisites.h" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/s.py" beforeDir="false" afterPath="$PROJECT_DIR$/s.py" afterDir="false" />
+    </list>
     <option name="EXCLUDED_CONVERTED_TO_IGNORED" value="true" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -10,15 +24,15 @@
   </component>
   <component name="CoverageDataManager">
     <SUITE FILE_PATH="coverage/useful$s.coverage" NAME="s Coverage Results" MODIFIED="1563564262035" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/python$s.coverage" NAME="s Coverage Results" MODIFIED="1563564694458" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
+    <SUITE FILE_PATH="coverage/python$s.coverage" NAME="s Coverage Results" MODIFIED="1563639947477" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/s.py">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="252">
-              <caret line="128" column="26" lean-forward="true" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
+            <state relative-caret-position="767">
+              <caret line="143" column="16" selection-start-line="143" selection-start-column="16" selection-end-line="143" selection-end-column="16" />
               <folding>
                 <element signature="e#0#18#0" expanded="true" />
               </folding>
@@ -40,6 +54,9 @@
       <replace>path + f&quot;</replace>
     </replaceStrings>
   </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../.." />
+  </component>
   <component name="IdeDocumentHistory">
     <option name="CHANGED_PATHS">
       <list>
@@ -53,6 +70,7 @@
     <option name="width" value="1853" />
     <option name="height" value="1055" />
   </component>
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectView">
     <navigator proportions="" version="1">
       <foldersAlwaysOnTop value="true" />
@@ -124,21 +142,24 @@
       <workItem from="1563561920790" duration="116000" />
       <workItem from="1563562084120" duration="2177000" />
       <workItem from="1563564322401" duration="692000" />
+      <workItem from="1563573079601" duration="2460000" />
+      <workItem from="1563606036505" duration="1345000" />
+      <workItem from="1563639883998" duration="74000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="6903000" />
+    <option name="totallyTimeSpent" value="10782000" />
   </component>
   <component name="ToolWindowManager">
     <frame x="1507" y="25" width="1853" height="1055" extended-state="6" />
     <layout>
-      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.257886" />
+      <window_info content_ui="combo" id="Project" order="0" visible="true" weight="0.13004981" />
       <window_info id="Structure" order="1" side_tool="true" weight="0.25" />
       <window_info id="Favorites" order="2" side_tool="true" />
       <window_info anchor="bottom" id="Message" order="0" />
       <window_info anchor="bottom" id="Find" order="1" />
-      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4997233" weight="0.3297414" />
+      <window_info anchor="bottom" id="Run" order="2" sideWeight="0.4991699" weight="0.24190065" />
       <window_info anchor="bottom" id="Debug" order="3" weight="0.4" />
       <window_info anchor="bottom" id="Cvs" order="4" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="5" weight="0.4" />
@@ -146,13 +167,13 @@
       <window_info anchor="bottom" id="Docker" order="7" show_stripe_button="false" />
       <window_info anchor="bottom" id="Version Control" order="8" />
       <window_info anchor="bottom" id="Database Changes" order="9" />
-      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5002767" side_tool="true" visible="true" weight="0.3297414" />
+      <window_info anchor="bottom" id="Event Log" order="10" sideWeight="0.5008301" side_tool="true" weight="0.21058315" />
       <window_info anchor="bottom" id="Terminal" order="11" weight="0.3297414" />
       <window_info anchor="bottom" id="Python Console" order="12" weight="0.3297414" />
       <window_info anchor="right" id="Commander" internal_type="SLIDING" order="0" type="SLIDING" weight="0.4" />
       <window_info anchor="right" id="Ant Build" order="1" weight="0.25" />
       <window_info anchor="right" content_ui="combo" id="Hierarchy" order="2" weight="0.25" />
-      <window_info active="true" anchor="right" id="SciView" order="3" visible="true" weight="0.15107913" />
+      <window_info active="true" anchor="right" id="SciView" order="3" visible="true" weight="0.37908134" />
       <window_info anchor="right" id="Database" order="4" />
     </layout>
   </component>
@@ -162,8 +183,8 @@
   <component name="editorHistoryManager">
     <entry file="file://$PROJECT_DIR$/s.py">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="252">
-          <caret line="128" column="26" lean-forward="true" selection-start-line="128" selection-start-column="26" selection-end-line="128" selection-end-column="26" />
+        <state relative-caret-position="767">
+          <caret line="143" column="16" selection-start-line="143" selection-start-column="16" selection-end-line="143" selection-end-column="16" />
           <folding>
             <element signature="e#0#18#0" expanded="true" />
           </folding>

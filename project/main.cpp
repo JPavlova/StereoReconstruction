@@ -46,7 +46,7 @@
 int main(int argc, char *argv[])
 {
     // Read in data
-        /*
+    /*
          * CALIBRATION DATA SETUP:
          *
          * focalLength = *.*
@@ -59,16 +59,17 @@ int main(int argc, char *argv[])
          * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
          * */
 
-        std::string object = "flower";
-        std::string dataDir = "../project/data/perfect";
-        std::regex regex (".*im[0-9]_" + object + ".png");
+    std::string object = "classroom_15deg";
 
-        CameraSensor sensor;
+    std::string dataDir = "../project/data/blender";
+    std::regex regex (".*im[0-9]_" + object + ".png");
 
-        if(!sensor.Init(dataDir, regex, object)) {
-            std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
-            return -1;
-        }
+    CameraSensor sensor;
+
+    if(!sensor.Init(dataDir, regex, object)) {
+        std::cout << "Failed to initialize sensor!\n Check data directory, path and image name regex!" << std::endl;
+        return -1;
+    }
 
     // Sensor loop over all frames
     while(sensor.ProcessNextFrame()) {
@@ -77,17 +78,22 @@ int main(int argc, char *argv[])
         StereoImage testImage(&sensor);
         int width = testImage.getLeftImageWidth();
         int height = testImage.getLeftImageHeight();
+//        writeRGBImage(sensor.getLeftFrame(), width, height, object + "/left.png");
+//        writeRGBImage(sensor.getRightFrame(), width, height, object + "/right.png");
 
         // Rectify
         testImage.rectify();
-        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, "./rect_l.png");
-        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, "./rect_r.png");
 
-        int iterations = 5;
+//        writeRGBImage((BYTE *) testImage.getLeftImageRectifiedUnoptional(), width, height, object + "/rect_left.png");
+//        writeRGBImage((BYTE *) testImage.getRightImageRectifiedUnoptional(), width, height, object + "/rect_right.png");
+
+        int iterations = 4;
         float alpha = 0.8;
         int blockSize = 5;
         int searchWindow = width/4;
+
         Matcher m(&testImage, blockSize, searchWindow, alpha);
+
         for (int i = 0; i < 5; ++i) {
             int bSize = 2 * i + 3;
             std::string sbSize = std::to_string(bSize);
@@ -101,10 +107,10 @@ int main(int argc, char *argv[])
                 std::cout << "+++++++++++++++" << std::endl;
                 m.reset();
                 m.runOpenCVMatch();
-                writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./opencv_disparity" + sbSize + ".png");
-                writeDepthImageRaw(m.getDepthMap(), width, height, "./opencv_depth" + sbSize + ".png");
-                writeRawDepthFile("./opencv_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
-                writeRawDisparityFile("./opencv_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+                writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, object + "/opencv_disparity" + sbSize + ".png");
+                writeDepthImageRaw(m.getDepthMap(), width, height, object + "/opencv_depth" + sbSize + ".png");
+                writeRawDepthFile(object + "/opencv_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+                writeRawDisparityFile(object + "/opencv_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
             }
             // RUN PATCHMATCH
             std::cout << "+++++++++++++++" << std::endl;
@@ -112,10 +118,10 @@ int main(int argc, char *argv[])
             std::cout << "+++++++++++++++" << std::endl;
             m.reset();
             m.runPatchMatch(iterations);
-            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./patchmatch_disparity" + sbSize + ".png");
-            writeDepthImageRaw(m.getDepthMap(), width, height, "./patchmatch_depth" + sbSize + ".png");
-            writeRawDepthFile("./patchmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
-            writeRawDisparityFile("./patchmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, object + "/patchmatch_disparity" + sbSize + ".png");
+            writeDepthImageRaw(m.getDepthMap(), width, height, object + "/patchmatch_depth" + sbSize + ".png");
+            writeRawDepthFile(object + "/patchmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+            writeRawDisparityFile(object + "/patchmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
 
             // RUN BLOCKMATCH
             std::cout << "+++++++++++++++" << std::endl;
@@ -123,10 +129,10 @@ int main(int argc, char *argv[])
             std::cout << "+++++++++++++++" << std::endl;
             m.reset();
             m.runBlockMatch();
-            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, "./blockmatch_disparity" + sbSize + ".png");
-            writeDepthImageRaw(m.getDepthMap(), width, height, "./blockmatch_depth" + sbSize + ".png");
-            writeRawDepthFile("./blockmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
-            writeRawDisparityFile("./blockmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+            writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, object + "/blockmatch_disparity" + sbSize + ".png");
+            writeDepthImageRaw(m.getDepthMap(), width, height, object + "/blockmatch_depth" + sbSize + ".png");
+            writeRawDepthFile(object + "/blockmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
+            writeRawDisparityFile(object + "/blockmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
 
         }
 
@@ -137,6 +143,7 @@ int main(int argc, char *argv[])
         writeMesh(vertices, width, height, "./pointcloud.off");
         */
     }
+
 
     return 0;
 }

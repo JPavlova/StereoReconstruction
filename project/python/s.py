@@ -129,16 +129,16 @@ def depth(threshold, filename, title, savef=False):
 if __name__ == "__main__":
 
     bsize = 3
-    savef = True
-    path="../classroom/"
+    savef = False
+    path="../../build-project-Desktop-Debug/classroom_1deg/"
 
     # need to manually adjust scales so images look similar!
     # opencv is for whatever reason always smaller by some factor 10-20!
 
-    depth(15000, path + f"opencv_depth_values{bsize}.txt", f"OPENCV DEPTHMAP BLOCKSIZE {bsize}", savef)
-    depth(280000, path + f"patchmatch_depth_values{bsize}.txt", f"PATCHMATCH DEPTHMAP BLOCKSIZE {bsize}", savef)
-    depth(280000, path + f"blockmatch_depth_values{bsize}.txt", f"BLOCKMATCH DEPTHMAP BLOCKSIZE {bsize}", savef)
+    #depth(6000, path + f"opencv_depth_values{bsize}.txt", f"OPENCV DEPTHMAP BLOCKSIZE {bsize}", savef)
+    #depth(100000, path + f"patchmatch_depth_values{bsize}.txt", f"PATCHMATCH DEPTHMAP BLOCKSIZE {bsize}", savef)
+    #depth(100000, path + f"blockmatch_depth_values{bsize}.txt", f"BLOCKMATCH DEPTHMAP BLOCKSIZE {bsize}", savef)
 
-    disparity(1200, path + f"opencv_disparity_values{bsize}.txt", f"OPENCV DISPARITY MAP BLOCKSIZE {bsize}", savef)
-    disparity(90, path + f"patchmatch_disparity_values{bsize}.txt", f"PATCHMATCH DISPARITY MAP BLOCKSIZE {bsize}", savef)
-    disparity(90, path + f"blockmatch_disparity_values{bsize}.txt", f"BLOCKMATCH DISPARITY MAP BLOCKSIZE {bsize}", savef)
+    #disparity(1400, path + f"opencv_disparity_values{bsize}.txt", f"OPENCV DISPARITY MAP BLOCKSIZE {bsize}", savef)
+    disparity(100, path + f"patchmatch_disparity_values{bsize}.txt", f"PATCHMATCH DISPARITY MAP BLOCKSIZE {bsize}", savef)
+    disparity(100, path + f"blockmatch_disparity_values{bsize}.txt", f"BLOCKMATCH DISPARITY MAP BLOCKSIZE {bsize}", savef)

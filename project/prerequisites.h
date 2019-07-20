@@ -34,11 +34,22 @@ struct Vertex {
     Pixel color;
 };
 
+// for debugging
+static void my_print_vector(Eigen::Vector3f v) {
+    std::cout << v(0) << ", " << v.y() << ", " << v.z() << std::endl;
+}
+
 struct calibrationData {
     float focalLength, baseline;
     int width, height;
     EIGEN_MAKE_ALIGNED_OPERATOR_NEW
     Eigen::Matrix4f rightExtrinsic;
+    Eigen::Matrix4f leftExtrinsic;
+
+    // Extrinsics or given?
+    bool extrinsicSet;
+    bool LeftExtrinsicSet;
+    bool baselineSet;
 };
 
 static calibrationData readCalibration(std::string filename) {
@@ -46,7 +57,11 @@ static calibrationData readCalibration(std::string filename) {
     std::string line;
     std::ifstream myfile(filename);
     calibrationData data;
-    data.rightExtrinsic.setIdentity();
+
+    // Set to not initialized
+    data.extrinsicSet = false;
+    data.LeftExtrinsicSet = false;
+    data.baselineSet = false;
 
     std::regex numbers("-*[0-9]+[.]*[0-9]*");
     std::smatch number_match;
@@ -74,23 +89,37 @@ static calibrationData readCalibration(std::string filename) {
                 data.height = atof(number_match.str(0).c_str());
                 std::cout << "\tHeight: " << data.height << ", ";
             }
-            else if(line.find("extrinsic") != std::string::npos) {
-                std::cout << "\n\t Extrinsics:\n";
-                float a[16] = {0.f};
+            else if(line.find("extrinsic") != std::string::npos && line.find("left") == std::string::npos) {
+                std::cout << "\n\t Extrinsics:\n\t";
                 for(int i = 0; i < 16; i++) {
                     std::regex_search(line, number_match, numbers);
-                    a[i] = atof(number_match.str(0).c_str());
-                    std::cout << a[i] << "," << ((i + 1) % 4 == 0 ? "\n\t" : "\t");
+                    data.rightExtrinsic(i/4, i%4) = atof(number_match.str(0).c_str());
+                    std::cout << data.rightExtrinsic(i/4, i%4) << "," << ((i + 1) % 4 == 0 ? "\n\t" : "\t");
                     line = number_match.suffix();
                 }
-                data.rightExtrinsic << a[0], a[1], a[2], a[3],
-                                       a[4], a[5], a[6], a[7],
-                                       a[8], a[9], a[10], a[11],
-                                       a[12], a[13], a[14], a[15];
+                data.extrinsicSet = true;
             }
+            else if(line.find("extrinsic") != std::string::npos && line.find("left") != std::string::npos) {
+                std::cout << "\n\t LEFT Extrinsics:\n\t";
+                for(int i = 0; i < 16; i++) {
+                    std::regex_search(line, number_match, numbers);
+                    data.leftExtrinsic(i/4, i%4) = atof(number_match.str(0).c_str());
+                    std::cout << data.leftExtrinsic(i/4, i%4) << "," << ((i + 1) % 4 == 0 ? "\n\t" : "\t");
+                    line = number_match.suffix();
+                }
+                data.LeftExtrinsicSet = true;
+            }
+
+
         }
         myfile.close();
+
         std::cout << std::endl;
+
+        if(!data.baselineSet) {
+            data.baseline = (data.leftExtrinsic.block<3,1>(0,3) - data.rightExtrinsic.block<3,1>(0,3)).norm();
+            std::cout << "\tBaseline from extrinsic: " << data.baseline << "\n" << std::endl;;
+        }
     }
 
     return data;
@@ -113,11 +142,6 @@ static void progressBar(float progress, std::string title) {
         std::cout.flush();
         std::cout << std::endl;
     }
-}
-
-// for debugging
-static void my_print_vector(Eigen::Vector3f v) {
-    std::cout << v(0) << ", " << v.y() << ", " << v.z() << std::endl;
 }
 
 #ifndef SAFE_DELETE_ARRAY
