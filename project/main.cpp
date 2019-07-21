@@ -59,7 +59,7 @@ int main(int argc, char *argv[])
          * extrinsic = [*, *, *, *; *, *, *, *; *, *, *, *; *, *, *, *]
          * */
 
-    std::string object = "classroom_15deg";
+    std::string object = "classroom_0deg";
 
     std::string dataDir = "../project/data/blender";
     std::regex regex (".*im[0-9]_" + object + ".png");
@@ -94,9 +94,10 @@ int main(int argc, char *argv[])
 
         Matcher m(&testImage, blockSize, searchWindow, alpha);
 
-        for (int i = 0; i < 5; ++i) {
+        for (int i = 1; i < 2; ++i) {
             int bSize = 2 * i + 3;
             std::string sbSize = std::to_string(bSize);
+            Vertex *vertices = new Vertex[width * height];
 
             m.setPatchSize(bSize);
 
@@ -111,7 +112,12 @@ int main(int argc, char *argv[])
                 writeDepthImageRaw(m.getDepthMap(), width, height, object + "/opencv_depth" + sbSize + ".png");
                 writeRawDepthFile(object + "/opencv_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
                 writeRawDisparityFile(object + "/opencv_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+
+                testImage.setDepthImage(m.getDepthMap());
+                testImage.backproject_frame(vertices);
+                writeMesh(vertices, width, height, "./pointcloud_opencv_5.off");
             }
+
             // RUN PATCHMATCH
             std::cout << "+++++++++++++++" << std::endl;
             std::cout << "STARTING PATCHMATCH PATCHSIZE " << bSize << std::endl;
@@ -122,6 +128,11 @@ int main(int argc, char *argv[])
             writeDepthImageRaw(m.getDepthMap(), width, height, object + "/patchmatch_depth" + sbSize + ".png");
             writeRawDepthFile(object + "/patchmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
             writeRawDisparityFile(object + "/patchmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+            delete(vertices);
+            vertices = new Vertex[width * height];
+            testImage.setDepthImage(m.getDepthMap());
+            testImage.backproject_frame(vertices);
+            writeMesh(vertices, width, height, "./pointcloud_patchmatch_5.off");
 
             // RUN BLOCKMATCH
             std::cout << "+++++++++++++++" << std::endl;
@@ -132,16 +143,18 @@ int main(int argc, char *argv[])
             writeDisparityImageRaw(m.getDisparityMap(), width, height, DEPTH_MODE::GRAY, object + "/blockmatch_disparity" + sbSize + ".png");
             writeDepthImageRaw(m.getDepthMap(), width, height, object + "/blockmatch_depth" + sbSize + ".png");
             writeRawDepthFile(object + "/blockmatch_depth_values" + sbSize + ".txt", m.getDepthMap(), width, height);
-            writeRawDisparityFile(object + "/blockmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);
+            writeRawDisparityFile(object + "/blockmatch_disparity_values" + sbSize + ".txt", m.getDisparityMap(), width, height);// point cloud/ backprojection
+
+            delete(vertices);
+            vertices = new Vertex[width * height];
+            testImage.setDepthImage(m.getDepthMap());
+            testImage.backproject_frame(vertices);
+            writeMesh(vertices, width, height, "./pointcloud_blockmatch_5.off");
+
 
         }
 
-        // point cloud/ backprojection
-        /*
-        Vertex *vertices = new Vertex[width * height];
-        testImage.backproject_frame(vertices);
-        writeMesh(vertices, width, height, "./pointcloud.off");
-        */
+
     }
 
 

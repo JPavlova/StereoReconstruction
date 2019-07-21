@@ -78,6 +78,7 @@ static calibrationData readCalibration(std::string filename) {
                 std::regex_search(line, number_match, numbers);
                 data.baseline = atof(number_match.str(0).c_str());
                 std::cout << "\tBaseline: " << data.baseline << ", ";
+                data.baselineSet = true;
             }
             else if(line.find("width") != std::string::npos) {
                 std::regex_search(line, number_match, numbers);

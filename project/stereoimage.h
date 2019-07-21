@@ -50,6 +50,8 @@ class StereoImage {
 
         CameraSensor *sensor;
 
+        void setDepthImage(float *depthImage);
+
 private:
         // raw data
         Pixel* m_leftImage;

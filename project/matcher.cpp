@@ -204,6 +204,7 @@ float *Matcher::getDepthMap()
             m_depthMap[i] = MINF;
         }
         else {
+//            std::cout << baseline << "*"<< focalLength << "/" << (float)abs(m_nearestNeighborField[i]) << std::endl;
             result = (baseline * focalLength) / (float)abs(m_nearestNeighborField[i]);
             m_depthMap[i] = result;
             //            std::cout << "UL: " << uL << ", UR: " << uR << " (compared to disparity: " << m_nearestNeighborField[i] << ") --> Z: " << m_depthMap[i] << std::endl;

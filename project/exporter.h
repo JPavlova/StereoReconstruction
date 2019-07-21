@@ -5,6 +5,11 @@
 #include <fstream>
 #include <FreeImage.h>
 
+int computeIndex(int x, int y, int width);
+float distance(Vector4f u, Vector4f v);
+bool triangleValid(Vector4f u, Vector4f v, Vector4f w);
+
+
 float roundToDecimal(float number, int decimalPlace) {
     return std::round(std::pow(10, decimalPlace) * number) / std::pow(10, decimalPlace);
 }
@@ -78,7 +83,6 @@ bool writeDisparityImageRaw(int *disparityMap, int width, int height, DEPTH_MODE
     if ((maximum - minimum) > EPSILON) {
         factor = 255.0f / (maximum - minimum);
     }
-    std::cout << "Min | Max | Factor: " << minimum << ", "<< maximum << ", "<< factor << std::endl;
 
     int i = 0, col;
     for (int h = 0; h < height; h++) {
@@ -194,11 +198,19 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         exit(1);
         std::cerr << "could not allocate memory for depth image" << std::endl;
     }
+
+    float* logDepth = (float*) malloc(width * height * sizeof(float));
+
+#pragma omp parallel for
+    for(int i = 0; i < width * height; i++){
+        logDepth[i] = log(depthImage[i]);
+    }
+
     // minimal, maximal depth values
     float minimum = std::numeric_limits<float>::infinity();
     float maximum =-std::numeric_limits<float>::infinity();
     for (int i = 0; i < width * height; i++) {
-        float current = depthImage[i];
+        float current = logDepth[i];
         if ((current != MINF) && (current != INF)){
             if (current > maximum) {
                 maximum = current;
@@ -210,32 +222,33 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
     }
     std::cout << "maximum: " << maximum << std::endl;
     std::cout << "minimum: " << minimum << std::endl;
-//    if (minimum < 0)
-//        minimum = 0;
-//    if (maximum > max) {
-//        maximum = max;
-//    }
+    if (minimum < 0)
+        minimum = 0;
+    if (maximum > max) {
+        maximum = max;
+    }
 
     float factor = 0.0f;
     if ((maximum - minimum) > 0.000001f) {
-        factor = 255.0f / (maximum - minimum);
-        std::cout << "OUR: " << factor << std::endl;
+        factor = 1.0f / (maximum - minimum);
     }
 
-    int i = 0;
     for (int h = 0; h < height; h++) {
         for (int w = 0; w < width; w++) {
-            i = (height - h) * width + w;
+
+            int i = (height - h) * width + w;
+
             float current;
-//            if(depthImage[i] > max){
-//                current = max;
-//            } else {
-//                current = depthImage[i] - minimum;
-//            }
-            int col = current * factor;
-            color.rgbRed = (BYTE) col % 256;
-            color.rgbGreen = (BYTE) col % 256;
-            color.rgbBlue = (BYTE) col % 256;
+            if(logDepth[i] > max){
+                current = max;
+            } else {
+                current = logDepth[i] - minimum;
+            }
+
+            RGBQUAD color;
+            color.rgbRed = (BYTE) current * factor * 255;
+            color.rgbGreen = (BYTE) current * factor * 255;
+            color.rgbBlue = (BYTE) current * factor * 255;
             FreeImage_SetPixelColor(bitmap, w, h, &color);
         }
     }
@@ -244,6 +257,7 @@ bool writeDepthImage(float *depthImage, int width, int height, DEPTH_MODE mode, 
         std::cout << "Depth image successfully saved!" << std::endl;
 
     FreeImage_DeInitialise();
+    free(logDepth);
 
     return true;
 }
@@ -274,44 +288,47 @@ void writeRawDisparityFile(std::string filename, int* depthMap, int width, int h
 
 // code mostly copied from my homework assignment
 bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const std::string& filename) {
-    float edgeThreshold = 0.01f; // 1cm
 
-    unsigned int nVertices = 0;
-    int *indices = new int[height * width];
+    int nVertices = 0;
+    int *meshIndices = new int[width * height];
 
-    for (int v = 0; v < width * height; v++) {
-        if (!(vertices[v].position.x() == MINF)) {
-            indices[v] = nVertices;
+    std::vector<Vector3i> faces;
+
+    for(int i = 0; i < width * height; i++){
+        if(vertices[i].position[0] != MINF){
+            meshIndices[i] = nVertices;
             nVertices++;
-        }
-        else {
-            indices[v] = -1; // should not be referenced, hence also a test
+        } else {
+            meshIndices[i] = -1;
         }
     }
 
-    unsigned nFaces = 0;
-
-    int i = 0;
     for (int y = 0; y < height-1; y++) {
-        for (int x = 0; x < width-1; x++) {
-            i = y * width + x;
 
-            if ((vertices[i].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + 1].position.x() != MINF)) {
-                if (((vertices[i].position - vertices[i + width].position).norm() <= edgeThreshold) &&
-                    ((vertices[i].position - vertices[i + 1].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + 1].position - vertices[i + width].position).norm() <= edgeThreshold)) {
-                    nFaces++;
-                }
+        for (int x = 0; x < width-1; x++) {
+
+            int origin = computeIndex(x, y, width);
+            int right = computeIndex(x + 1, y, width);
+            int bottom = computeIndex(x, y + 1, width);
+
+            if(triangleValid(vertices[origin].position, vertices[right].position, vertices[bottom].position)){
+                faces.push_back(Vector3i(meshIndices[origin], meshIndices[bottom], meshIndices[right]));
             }
-            if ((vertices[i + 1].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + width + 1].position.x() != MINF)) {
-                if (((vertices[i + 1].position - vertices[i + width].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + 1].position - vertices[i + width + 1].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + width].position - vertices[i + width + 1].position).norm() <= edgeThreshold)) {
-                    nFaces++;
-                }
+        }
+
+        for(int x = 1; x < width; x++){
+
+            int origin = computeIndex(x, y, width);
+            int bottomLeft = computeIndex(x -1, y + 1, width);
+            int bottom = computeIndex(x, y + 1, width);
+
+            if(triangleValid(vertices[origin].position, vertices[bottomLeft].position, vertices[bottom].position)){
+                faces.push_back(Vector3i(meshIndices[origin], meshIndices[bottomLeft], meshIndices[bottom]));
             }
         }
     }
+
+    int nFaces = faces.size();
 
     // Write off file
     std::ofstream outFile(filename);
@@ -321,40 +338,44 @@ bool writeMesh(Vertex *vertices, unsigned int width, unsigned int height, const 
     outFile << "COFF" << std::endl;
     outFile << nVertices << " " << nFaces << " 0" << std::endl;
 
-    // save vertices
-    for (int v = 0; v < width * height; v++) {
-        if (!(vertices[v].position.x() == MINF)) {
-            outFile << roundToDecimal(vertices[v].position[0], 3) << " " << roundToDecimal(vertices[v].position[1], 3) << " " << roundToDecimal(vertices[v].position[2], 3) << " "
-                    << (int) vertices[v].color[0] << " " << (int) vertices[v].color[1] << " " << (int) vertices[v].color[2] << " " << 255 << std::endl;
+    for(int i = 0; i < width * height; i++){
+
+        if(meshIndices[i] != -1) {
+
+            for(int j = 0; j < 3; j++){
+                outFile << vertices[i].position[j] << " ";
+            }
+
+            for(int j = 0; j < 4; j++){
+                outFile << (int) (vertices[i].color[j]) << " ";
+            }
+
+            outFile << std::endl;
         }
     }
 
-    // save faces
-    i = 0;
-    for (int y = 0; y < height-1; y++) {
-        for (int x = 0; x < width-1; x++) {
-            i = y * width + x;
-            if ((vertices[i].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + 1].position.x() != MINF)) {
-                if (((vertices[i].position - vertices[i + width].position).norm() <= edgeThreshold) &&
-                    ((vertices[i].position - vertices[i + 1].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + 1].position - vertices[i + width].position).norm() <= edgeThreshold)) {
-                    outFile << 3 << " " << indices[i] << " " << indices[i + width] << " " << indices[i + 1] << std::endl;
-                }
-            }
-            if ((vertices[i + 1].position.x() != MINF) && (vertices[i + width].position.x() != MINF) && (vertices[i + width + 1].position.x() != MINF)) {
-                if (((vertices[i + 1].position - vertices[i + width].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + 1].position - vertices[i + width + 1].position).norm() <= edgeThreshold) &&
-                    ((vertices[i + width].position - vertices[i + width + 1].position).norm() <= edgeThreshold)) {
-                    outFile << 3 << " " << indices[i + 1] << " " << indices[i + width] << " " << indices[i + width + 1] << std::endl;
-                }
-            }
-        }
+    for(Vector3i face:faces){
+        outFile << "3 " << face[0] << " " << face[1] << " " << face[2] << std::endl;
     }
 
     // close file
     outFile.close();
 
     return true;
+}
+
+int computeIndex(int x, int y, int width){
+    return y * width + x;
+}
+
+float distance(Vector4f u, Vector4f v){
+    return (u-v).norm();
+}
+
+bool triangleValid(Vector4f u, Vector4f v, Vector4f w){
+    float edgeThreshold = 1e3;
+    return u[0] != MINF && v[0] != MINF && w[0] != MINF &&
+            distance(u,v) < edgeThreshold && distance(u,w) < edgeThreshold && distance(v,w) < edgeThreshold;
 }
 
 #endif // EXPORTER_H
