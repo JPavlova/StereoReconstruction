@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import os, fnmatch
+import matplotlib
+import os
 
 
 def trya():
@@ -122,14 +123,15 @@ def h_fun_disp(hist_array, min_, max_, title, save=False, filename=None):
 
     highest = np.argmax(hist_normalized)
     second = highest + 1 if highest == 0 else highest - 1
-    plt.hlines(hist_normalized[highest], centers[second], centers[highest], color='orange')
+    plt.hlines(hist_normalized[highest], centers[second], centers[highest], color='darkmagenta')
     plt.text(centers[second], hist_normalized[highest], '{:.2f}'.format(hist_normalized[highest]),
-             ha="left" if highest == 0 else "right", va='center', color='orange')
+             ha="left" if highest == 0 else "right", va='center', color='darkmagenta', fontsize=14)
 
     plt.ylim(0, 100)
-    plt.title(title, y=1.03)
-    plt.xlabel(f"Disparity differences (in pixels), bin size: {max(int(bin_size), 1)}")
-    plt.ylabel("Percent pixels contained in bin")
+    plt.tick_params(labelsize=12)
+    #plt.title(title, y=1.03)
+    plt.xlabel(f"Disparity differences (in pixels), bin size: {max(int(bin_size), 1)}", fontsize=14)
+    plt.ylabel("Percent pixels contained in bin", fontsize=14)
     if(save): plt.savefig(filename + f"_{int(min_)}_{int(max_)}.png")
     plt.show()
 
@@ -198,7 +200,7 @@ if __name__ == "__main__":
 
     bsize = 11
     savef = True
-    path="../../build-project-Desktop-Debug/"
+    path="../../build-project-Desktop-Debug"
 
 
     #compare(path, bsize, "depth",
